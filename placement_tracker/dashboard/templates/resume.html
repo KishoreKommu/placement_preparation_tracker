@@ -1,0 +1,268 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+
+<style>
+    :root {
+        --bg-pale: #f8fafc;
+        --panel-bg: #ffffff;
+        --slate-soft: #f1f5f9;
+        --accent: #6366f1;
+        --text-main: #1e293b;
+        --border-color: #e2e8f0;
+        --sidebar-width: 280px;
+    }
+
+    body.dark-theme {
+        --bg-pale: #0d0f14 !important;
+        --panel-bg: #161922 !important;
+        --slate-soft: #1f232d !important;
+        --accent: #a5b4fc !important;
+        --text-main: #f8fafc !important;
+        --text-muted: #94a3b8 !important;
+        --border-color: #2d3343 !important;
+    }
+
+    body {
+        background-color: var(--bg-pale);
+        color: var(--text-main);
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        margin: 0;
+        overflow-x: hidden;
+    }
+
+    /* Seamless Sidebar Integration */
+    .main-content-wrapper {
+        margin-left: var(--sidebar-width) !important;
+        width: calc(100% - var(--sidebar-width)) !important;
+        padding: 0 !important;
+    }
+
+    .resume-container {
+        padding: 2.5rem 3rem;
+        max-width: 1600px;
+        margin: 0 auto;
+    }
+
+    /* Bento Panels */
+    .pale-panel {
+        background: var(--panel-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 1.5rem;
+        padding: 1.75rem;
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.3s;
+    }
+
+    /* Premium Dropzone */
+    .dropzone-wrapper {
+        border: 2px dashed var(--border-color);
+        background: var(--slate-soft);
+        border-radius: 1.5rem;
+        padding: 4rem 2rem;
+        text-align: center;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        position: relative;
+    }
+
+    .dropzone-wrapper:hover, .dropzone-wrapper.dragover {
+        border-color: var(--accent);
+        background: rgba(99, 102, 241, 0.05);
+    }
+
+    .dropzone-icon {
+        font-size: 3.5rem;
+        color: var(--accent);
+        margin-bottom: 1.5rem;
+        filter: drop-shadow(0 10px 15px rgba(99, 102, 241, 0.2));
+    }
+
+    #id_resume_file {
+        position: absolute;
+        width: 100%; height: 100%;
+        top: 0; left: 0; opacity: 0;
+        cursor: pointer;
+    }
+
+    /* Score Visualization */
+    .score-gauge {
+        width: 140px;
+        height: 140px;
+        border-radius: 50%;
+        background: conic-gradient(var(--accent) var(--score-deg), var(--slate-soft) 0deg);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto;
+        position: relative;
+    }
+
+    .score-gauge::after {
+        content: "";
+        position: absolute;
+        width: 110px; height: 110px;
+        background: var(--panel-bg);
+        border-radius: 50%;
+    }
+
+    .score-inner {
+        position: relative;
+        z-index: 1;
+        font-size: 2rem;
+        font-weight: 800;
+        color: var(--accent);
+    }
+
+    /* Guidance Cards */
+    .guide-item {
+        padding: 1rem;
+        border-radius: 1rem;
+        background: var(--slate-soft);
+        margin-bottom: 1rem;
+        border-left: 4px solid var(--accent);
+    }
+
+    @media (max-width: 1100px) {
+        .resume-grid { display: flex; flex-direction: column; }
+    }
+</style>
+
+<div class="resume-container animate__animated animate__fadeIn">
+    
+    <div class="row mb-5 align-items-end">
+        <div class="col-md-8">
+            <h1 class="fw-black text-slate-900 mb-1 display-5">Resume AI Optimizer 📄</h1>
+            <p class="text-muted fs-5">Identify structural gaps and optimize your CV for ATS screening algorithms.</p>
+        </div>
+        <div class="col-md-4 text-md-end">
+            <button class="btn pale-panel py-2 px-3 border shadow-sm" onclick="toggleThemeEngine()">
+                <i class="fas fa-adjust me-2"></i> Toggle Vision
+            </button>
+        </div>
+    </div>
+
+    <div class="row g-4 resume-grid">
+        <div class="col-lg-7">
+            <div class="pale-panel h-100 anim-panel">
+                <form method="POST" enctype="multipart/form-data" id="resumeForm">
+                    {% csrf_token %}
+                    <div class="dropzone-wrapper" id="dropzone">
+                        <i class="fas fa-cloud-upload-alt dropzone-icon"></i>
+                        <h4 class="fw-bold mb-2">Initiate Upload</h4>
+                        <p class="text-muted small">Drag your CV here or click to browse (PDF/DOCX)</p>
+                        <div id="file-name" class="badge bg-primary px-3 py-2 mt-3 d-none"></div>
+                        {{ form.resume_file }}
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100 rounded-pill py-3 mt-4 fw-bold shadow-lg">
+                        <i class="fas fa-microchip me-2"></i> Launch AI Scan
+                    </button>
+                </form>
+
+                {% if score %}
+                <div class="mt-5 animate__animated animate__fadeInUp">
+                    <hr class="my-5 opacity-25">
+                    <div class="row align-items-center">
+                        <div class="col-md-5 text-center border-md-end">
+                            <div class="score-gauge" style="--score-deg: {{ score }}%;">
+                                <div class="score-inner counter-val" data-target="{{ score }}">0</div>
+                            </div>
+                            <p class="mt-3 fw-bold text-muted small text-uppercase tracking-wider">ATS Readiness Index</p>
+                        </div>
+                        <div class="col-md-7 ps-md-5">
+                            <h5 class="fw-bold mb-3"><i class="fas fa-robot me-2 text-accent"></i> Optimization Log</h5>
+                            <div class="text-muted small leading-relaxed">
+                                {{ feedback|linebreaks }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="col-lg-5">
+            <div class="pale-panel mb-4 anim-panel" style="animation-delay: 0.1s">
+                <h6 class="fw-bold mb-4 text-uppercase tracking-wider text-muted small">Quality Guidelines</h6>
+                <div class="guide-item">
+                    <div class="fw-bold small mb-1">Impact Verbs</div>
+                    <p class="x-small text-muted mb-0">Use "Architected," "Spearheaded," or "Streamlined" to signal leadership.</p>
+                </div>
+                <div class="guide-item">
+                    <div class="fw-bold small mb-1">Metrics & Data</div>
+                    <p class="x-small text-muted mb-0">Quantify results (e.g., "Reduced latency by 40%") to prove competency.</p>
+                </div>
+                <div class="guide-item">
+                    <div class="fw-bold small mb-1">Page Architecture</div>
+                    <p class="x-small text-muted mb-0">Stick to a single-column layout for maximum ATS parsing accuracy.</p>
+                </div>
+            </div>
+
+            <div class="pale-panel border-0 text-white anim-panel" style="background: linear-gradient(135deg, #6366f1 0%, #4338ca 100%); animation-delay: 0.2s">
+                <h6 class="fw-bold mb-3">AI Recommendation</h6>
+                <p class="small opacity-90 mb-0">Based on current trends for **Tier-1 SDE roles**, ensure your "Projects" section highlights at least one scalable system design implementation.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // File UI Feedback
+    const fileInput = document.querySelector('input[type="file"]');
+    const fileNameBadge = document.getElementById('file-name');
+    const dropzone = document.getElementById('dropzone');
+
+    if(fileInput) {
+        fileInput.addEventListener('change', (e) => {
+            if (fileInput.files.length > 0) {
+                fileNameBadge.innerText = `Selected: ${fileInput.files[0].name}`;
+                fileNameBadge.classList.remove('d-none');
+                gsap.from(fileNameBadge, { scale: 0.8, opacity: 0, duration: 0.3 });
+            }
+        });
+    }
+
+    // Drag & Drop visual logic
+    ['dragenter', 'dragover'].forEach(e => {
+        dropzone.addEventListener(e, () => dropzone.classList.add('dragover'), false);
+    });
+    ['dragleave', 'drop'].forEach(e => {
+        dropzone.addEventListener(e, () => dropzone.classList.remove('dragover'), false);
+    });
+
+    // Theme Engine Sync
+    function toggleThemeEngine() {
+        document.body.classList.toggle('dark-theme');
+        const isDark = document.body.classList.contains('dark-theme');
+        localStorage.setItem('pro-theme', isDark ? 'dark' : 'light');
+    }
+
+    window.addEventListener('load', () => {
+        // GSAP Staggered Entry
+        gsap.from(".anim-panel", {
+            y: 30,
+            opacity: 0,
+            duration: 0.8,
+            stagger: 0.15,
+            ease: "power2.out"
+        });
+
+        // Value Counter
+        document.querySelectorAll('.counter-val').forEach(c => {
+            const target = +c.dataset.target;
+            const obj = { val: 0 };
+            gsap.to(obj, {
+                val: target,
+                duration: 2,
+                ease: "power3.out",
+                onUpdate: () => { c.innerText = Math.ceil(obj.val) + "%"; }
+            });
+        });
+
+        if(localStorage.getItem('pro-theme') === 'dark') document.body.classList.add('dark-theme');
+    });
+</script>
+
+{% endblock %}

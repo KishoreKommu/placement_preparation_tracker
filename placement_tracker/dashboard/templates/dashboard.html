@@ -1,0 +1,310 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+
+<style>
+    /* 1. PROFESSIONAL COLOR ARCHITECTURE */
+    :root {
+        --bg-pale: #f8fafc;
+        --panel-bg: #ffffff;
+        --slate-soft: #f1f5f9;
+        --accent: #6366f1;
+        --text-main: #1e293b;
+        --text-muted: #64748b;
+        --border-soft: #e2e8f0;
+        --lc-brand: #ffa116;
+        --gfg-brand: #2f8d46;
+        --danger: #ef4444;
+    }
+
+    body {
+        background-color: var(--bg-pale);
+        color: var(--text-main);
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        margin: 0;
+    }
+
+    /* 2. BENTO GRID SYSTEM */
+    .dashboard-container {
+        padding: 2.5rem 3.5rem;
+        display: grid;
+        grid-template-columns: repeat(12, 1fr);
+        grid-auto-rows: minmax(160px, auto);
+        gap: 1.5rem;
+    }
+
+    .pale-card {
+        background: var(--panel-bg);
+        border: 1px solid var(--border-soft);
+        border-radius: 1.5rem;
+        padding: 1.75rem;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        display: flex;
+        flex-direction: column;
+    }
+
+    .pale-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        border-color: var(--accent);
+    }
+
+    /* 3. DYNAMIC STREAK BADGES */
+    .dual-streak-wrapper { display: flex; gap: 12px; }
+    
+    .streak-card {
+        padding: 10px 20px;
+        border-radius: 50px;
+        font-weight: 800;
+        font-size: 0.8rem;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        border: 1px solid;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+    .streak-lc { background: #fff7ed; color: #9a3412; border-color: #ffedd5; }
+    .streak-gfg { background: #f0fdf4; color: #166534; border-color: #dcfce7; }
+
+    /* 4. MISSION STYLING */
+    .mission-item {
+        background: var(--bg-pale);
+        border: 1px solid var(--border-soft);
+        border-radius: 12px;
+        padding: 12px 16px;
+        margin-bottom: 10px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transition: 0.2s;
+    }
+    .mission-item:hover { border-color: var(--accent); }
+    
+    .delete-btn {
+        color: var(--text-muted);
+        background: none;
+        border: none;
+        cursor: pointer;
+        transition: 0.2s;
+        padding: 5px;
+    }
+    .delete-btn:hover { color: var(--danger); transform: scale(1.1); }
+
+    .kpi-label {
+        font-size: 0.75rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 1.2px;
+        color: var(--text-muted);
+        margin-bottom: 0.5rem;
+    }
+
+    .kpi-value {
+        font-size: 2.8rem;
+        font-weight: 900;
+        color: var(--text-main);
+        letter-spacing: -1.5px;
+        margin: 0;
+    }
+
+    .terminal-mini {
+        background: #0f172a;
+        color: #10b981;
+        font-family: 'Fira Code', monospace;
+        font-size: 0.8rem;
+        padding: 1.25rem;
+        border-radius: 1.25rem;
+        flex-grow: 1;
+        border: 1px solid #1e293b;
+        overflow: hidden;
+    }
+    .terminal-line { margin-bottom: 6px; opacity: 0; animation: terminalIn 0.4s forwards; }
+    @keyframes terminalIn { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
+
+</style>
+
+<div class="dashboard-container">
+    
+    <div class="col-12 d-flex justify-content-between align-items-end" style="grid-column: span 12; margin-bottom: 1.5rem;">
+        <div>
+            <h1 class="fw-black m-0" style="font-size: 2.5rem; letter-spacing: -2px;">Command Center</h1>
+            <p class="text-muted fw-medium"><i class="fas fa-circle text-success me-2 small animate__animated animate__pulse animate__infinite"></i> Uplink: <span class="text-dark fw-bold">{{ request.user.username }}</span></p>
+        </div>
+        
+        <div class="dual-streak-wrapper">
+            <div class="streak-card streak-lc">
+                <i class="fab fa-leetcode"></i> LC STREAK: {{ lc_streak|default:"0" }}
+            </div>
+            <div class="streak-card streak-gfg">
+                <i class="fas fa-code"></i> GFG STREAK: {{ gfg_streak|default:"0" }}
+            </div>
+        </div>
+    </div>
+
+    <div class="pale-card" style="grid-column: span 4;">
+        <div>
+            <div class="kpi-label">Sync Readiness</div>
+            <div class="kpi-value"><span class="counter" data-target="{{ app_score|default:0 }}">0</span>%</div>
+        </div>
+        <div class="mt-4" style="height: 8px; background: var(--slate-soft); border-radius: 50px; overflow: hidden;">
+            <div id="readiness-bar" style="height: 100%; background: var(--accent); width: 0%; transition: width 2s ease;"></div>
+        </div>
+    </div>
+
+    <div class="pale-card" style="grid-column: span 4; border-bottom: 4px solid var(--lc-brand);">
+        <div class="kpi-label">LeetCode Real-Time</div>
+        <div class="kpi-value counter" data-target="{{ lc_solved|default:0 }}">0</div>
+        <div class="text-muted x-small mt-3">Solved Problems</div>
+    </div>
+
+    <div class="pale-card" style="grid-column: span 4; border-bottom: 4px solid var(--gfg-brand);">
+        <div class="kpi-label">GFG Scraped Score</div>
+        <div class="kpi-value counter" data-target="{{ gfg_solved|default:0 }}">0</div>
+        <div class="text-muted x-small mt-3">Verified Points</div>
+    </div>
+
+    <div class="pale-card" style="grid-column: span 4; grid-row: span 2;">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div class="kpi-label m-0">Active Missions</div>
+            <a href="/skills" class="btn btn-sm btn-soft-primary rounded-pill fw-bold" style="font-size: 0.65rem; background: var(--slate-soft);">+ ADD NEW</a>
+        </div>
+        <div id="missions-container" style="overflow-y: auto; max-height: 350px; padding-right: 5px;">
+            {% for goal in user_goals %}
+            <div class="mission-item" id="goal-{{ goal.id }}">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="bg-soft-primary text-primary rounded-3 p-2 d-flex align-items-center justify-content-center" style="width: 35px; height: 35px; background: var(--slate-soft);">
+                        <i class="fas fa-rocket small"></i>
+                    </div>
+                    <div>
+                        <div class="fw-bold small">{{ goal.skill.name }}</div>
+                        <div class="text-muted x-small">{{ goal.skill.level }}</div>
+                    </div>
+                </div>
+                <button class="delete-btn" onclick="removeGoal('{{ goal.id }}')">
+                    <i class="fas fa-trash-alt"></i>
+                </button>
+            </div>
+            {% empty %}
+            <div class="text-center py-5 text-muted small">No active missions initialized.</div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="pale-card" style="grid-column: span 8; grid-row: span 2;">
+        <div class="d-flex justify-content-between align-items-start">
+            <div class="kpi-label">Combined Velocity Trajectory</div>
+            <span class="badge bg-light text-dark border px-2 py-1">Real-time Data</span>
+        </div>
+        <div style="height: 280px; width: 100%;">
+            <canvas id="velocityChart"></canvas>
+        </div>
+    </div>
+
+    <div class="pale-card" style="grid-column: span 12; grid-row: span 1; background: #0f172a; border: none; min-height: 200px;">
+        <div class="kpi-label text-white opacity-50 mb-3">System Background Process</div>
+        <div class="terminal-mini" id="terminalLog">
+            <div class="terminal-line">> Uplink established...</div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    // Safe removal with element existence check
+    function removeGoal(goalId) {
+        const row = document.getElementById(`goal-${goalId}`);
+        if (!row) return;
+        
+        gsap.to(row, {
+            x: 50,
+            opacity: 0,
+            duration: 0.4,
+            ease: "power2.in",
+            onComplete: () => {
+                window.location.href = `/delete-goal/${goalId}/`;
+            }
+        });
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+        // Safe Chart initialization
+        const canvas = document.getElementById('velocityChart');
+        if (canvas) {
+            const ctxLine = canvas.getContext('2d');
+            const gradient = ctxLine.createLinearGradient(0, 0, 0, 300);
+            gradient.addColorStop(0, 'rgba(99, 102, 241, 0.1)');
+            gradient.addColorStop(1, 'rgba(99, 102, 241, 0)');
+
+            new Chart(ctxLine, {
+                type: 'line',
+                data: {
+                    labels: ['Fetch_1', 'Fetch_2', 'Fetch_3', 'Fetch_4', 'Fetch_5', 'Now'],
+                    datasets: [{
+                        data: [10, 45, 120, 350, 500, {{ total_aggregate|default:0 }}],
+                        borderColor: '#6366f1',
+                        borderWidth: 4,
+                        tension: 0.4,
+                        fill: true,
+                        backgroundColor: gradient,
+                        pointRadius: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { display: false },
+                        x: { grid: { display: false }, ticks: { color: '#94a3b8', font: { weight: '600' } } }
+                    }
+                }
+            });
+        }
+
+        // Counter Animations
+        document.querySelectorAll('.counter').forEach(c => {
+            gsap.to(c, { 
+                innerText: c.dataset.target || 0, 
+                duration: 1.5, 
+                snap: { innerText: 1 } 
+            });
+        });
+        
+        // Progress Bar sync
+        setTimeout(() => {
+            const bar = document.getElementById('readiness-bar');
+            if (bar) bar.style.width = '{{ app_score|default:0 }}%';
+        }, 500);
+    });
+
+    // Error-proof Terminal Logs
+    const logs = [
+        "Syncing profile: {{ request.user.username }}",
+        "LeetCode: {{ lc_solved|default:0 }} problems verified.",
+        "GFG: {{ gfg_solved|default:0 }} points synced.",
+        "Aggregate Units: {{ total_aggregate|default:0 }}",
+        "Protocols: NOMINAL.",
+        "Awaiting next submission node..."
+    ];
+
+    function addTerminalLine() {
+        const term = document.getElementById('terminalLog');
+        if (!term) return;
+
+        const line = document.createElement('div');
+        line.className = 'terminal-line';
+        line.innerText = `> ${logs[Math.floor(Math.random() * logs.length)]}`;
+        term.appendChild(line);
+        if (term.children.length > 7) term.removeChild(term.firstChild);
+    }
+    
+    // Check interval every 3.5s
+    setInterval(addTerminalLine, 3500);
+</script>
+
+{% endblock %}

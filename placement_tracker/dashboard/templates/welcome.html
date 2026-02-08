@@ -1,0 +1,319 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+
+<style>
+    /* 1. MINIMALIST PALETTE ARCHITECTURE */
+    .sidebar-wrapper, .top-header { display: none !important; }
+    .main-content-wrapper { 
+        margin-left: 0 !important; width: 100vw !important; padding: 0 !important; 
+        max-width: 100% !important; background: var(--bg-pale) !important;
+    }
+
+    :root {
+        --primary: #6366f1;
+        --bg-pale: #f8fafc;
+        --panel-bg: #ffffff;
+        --text-main: #1e293b;
+        --text-muted: #64748b;
+        --border-soft: #f1f5f9;
+        --accent-pale: #eef2ff;
+    }
+
+    body.dark-theme {
+        --bg-pale: #0d0f14;
+        --panel-bg: #161922;
+        --text-main: #f8fafc;
+        --text-muted: #94a3b8;
+        --border-soft: #1f232d;
+        --accent-pale: #1e1b4b;
+    }
+
+    body {
+        background-color: var(--bg-pale);
+        color: var(--text-main);
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        overflow-x: hidden;
+        transition: all 0.4s ease;
+    }
+
+    /* 2. GHOST NAVIGATION */
+    .navbar-wide {
+        width: 100%;
+        padding: 1.25rem 6rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: var(--panel-bg);
+        position: fixed;
+        top: 0;
+        z-index: 1000;
+        border-bottom: 1px solid var(--border-soft);
+    }
+
+    /* 3. REFINED HERO SECTION */
+    .hero-full {
+        min-height: 85vh;
+        display: flex;
+        align-items: center;
+        padding: 120px 6rem 60px;
+    }
+
+    .hero-title {
+        font-size: clamp(3rem, 5vw, 4.2rem);
+        font-weight: 800;
+        line-height: 1.1;
+        letter-spacing: -2px;
+        color: var(--text-main);
+    }
+
+    /* FIXED IMAGE CONTAINER */
+    .hero-img-box {
+        display: flex;
+        justify-content: center;
+        position: relative;
+    }
+
+    .hero-main-img {
+        width: 100%;
+        max-width: 550px;
+        height: auto;
+        border-radius: 24px; /* Added slight rounding for a modern feel */
+        filter: drop-shadow(0 20px 40px rgba(99, 102, 241, 0.2));
+        animation: float 6s ease-in-out infinite;
+    }
+
+    /* 4. PROFESSIONAL BENTO CARDS */
+    .pale-panel {
+        background: var(--panel-bg);
+        border: 1px solid var(--border-soft);
+        border-radius: 1.5rem;
+        padding: 2.5rem;
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.3s;
+        height: 100%;
+    }
+    .pale-panel:hover {
+        transform: translateY(-10px);
+        border-color: var(--primary);
+    }
+
+    .stat-container {
+        display: flex;
+        align-items: baseline;
+        justify-content: center;
+        gap: 4px;
+    }
+
+    .stat-value {
+        font-size: 3.5rem;
+        font-weight: 800;
+        color: var(--primary);
+        letter-spacing: -2px;
+    }
+
+    /* 5. NEW PROFESSIONAL FEATURES */
+    .live-dot {
+        width: 8px; height: 8px;
+        background: #10b981;
+        border-radius: 50%;
+        display: inline-block;
+        margin-right: 8px;
+        box-shadow: 0 0 10px #10b981;
+        animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
+
+    .btn-minimal {
+        padding: 14px 32px;
+        border-radius: 12px;
+        font-weight: 700;
+        transition: 0.3s;
+        text-decoration: none;
+        display: inline-block;
+    }
+    .btn-indigo { background: var(--primary); color: white; border: none; }
+    .btn-indigo:hover { opacity: 0.9; transform: translateY(-2px); color: white; }
+
+    /* Partner Grid */
+    .partners-cloud {
+        opacity: 0.5;
+        filter: grayscale(1);
+        transition: 0.3s;
+    }
+    .partners-cloud:hover { filter: grayscale(0); opacity: 1; }
+
+    @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
+    @media (max-width: 992px) { .hero-full, .navbar-wide { padding: 1.5rem; } .hero-main-img { max-width: 320px; } }
+</style>
+
+<nav class="navbar-wide">
+    <div class="d-flex align-items-center gap-2">
+        <div class="bg-primary text-white rounded-3 p-2 shadow-sm"><i class="fas fa-terminal"></i></div>
+        <span class="fw-bold fs-4">PrepMaster</span>
+    </div>
+    <div class="d-flex align-items-center gap-4">
+        <div class="small fw-bold text-muted d-none d-md-block">
+            <span class="live-dot"></span> <span id="node-count">1,204</span> Nodes Online
+        </div>
+        <button class="btn p-0 text-primary fs-5" onclick="toggleLandingTheme()" id="theme-toggle"><i class="fas fa-moon"></i></button>
+        <a href="{% url 'login' %}" class="fw-bold text-decoration-none" style="color: var(--text-main);">Log In</a>
+        <a href="{% url 'register' %}" class="btn btn-dark rounded-3 px-4 fw-bold">Get Started</a>
+    </div>
+</nav>
+
+<section class="hero-full">
+    <div class="container-fluid p-0">
+        <div class="row align-items-center g-0">
+            <div class="col-lg-6">
+                <div class="badge px-3 py-2 rounded-pill mb-4 small fw-bold" style="background: var(--accent-pale); color: var(--primary);">
+                    RECRUITMENT ENGINE v2.6
+                </div>
+                <h1 class="hero-title">Career Preparation. <br>Simplified.</h1>
+                <p class="fs-5 opacity-75 mb-5 pe-lg-5" style="color: var(--text-muted); line-height: 1.6;">
+                    Quantify your technical growth and automate the path to Tier-1 offers with the industry's most minimalist engineering workspace.
+                </p>
+                <div class="d-flex flex-wrap gap-3">
+                    <a href="{% url 'register' %}" class="btn-minimal btn-indigo">Initialize Session</a>
+                    <a href="#protocol" class="btn-minimal border border-2 fw-bold" style="color: var(--text-main);">Architecture</a>
+                </div>
+            </div>
+            <div class="col-lg-6 d-none d-lg-block">
+                <div class="hero-img-box">
+                    <img src="https://static.placementpreparation.io/cdn-cgi/image/metadata=keep,quality=60,width=1790,height=1416,f=auto,fit=cover/aptitude-images/aptitude/category/v2/webps/placement-prep-index-banner-web.webp" 
+                         id="main-hero-img" 
+                         class="hero-main-img animate__animated animate__fadeIn" 
+                         alt="Placement Preparation Hero">
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="container pb-5">
+    <div class="partners-cloud d-flex justify-content-between align-items-center flex-wrap gap-4 px-5">
+        <i class="fab fa-google fa-2x"></i>
+        <i class="fab fa-amazon fa-2x"></i>
+        <i class="fab fa-microsoft fa-2x"></i>
+        <i class="fab fa-apple fa-2x"></i>
+        <i class="fab fa-meta fa-2x"></i>
+        <i class="fab fa-uber fa-2x"></i>
+    </div>
+</div>
+
+<section class="py-5" id="stats-trigger">
+    <div class="container py-5">
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="pale-panel text-center">
+                    <div class="stat-container">
+                        <div class="stat-value counter" data-target="15">0</div>
+                        <span class="stat-value">K</span>
+                    </div>
+                    <h6 class="fw-bold text-muted text-uppercase small tracking-widest mt-2">Active Learners</h6>
+                    <p class="small text-muted mt-3">Verified engineers tracking daily growth metrics.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="pale-panel text-center">
+                    <div class="stat-container">
+                        <div class="stat-value counter" data-target="98">0</div>
+                        <span class="stat-value">%</span>
+                    </div>
+                    <h6 class="fw-bold text-muted text-uppercase small tracking-widest mt-2">Success Rate</h6>
+                    <p class="small text-muted mt-3">Average resume visibility increase after AI synthesis.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="pale-panel" style="background: var(--primary); border: none; position: relative; overflow: hidden;">
+                    <h4 class="text-white fw-bold mb-3">System Health</h4>
+                    <p class="text-white opacity-75 small">Engine status is monitored across global node network.</p>
+                    <div class="mt-4 pt-3 border-top border-white border-opacity-25">
+                        <span class="text-white fw-bold small"><i class="fas fa-check-double me-2"></i>STATUS: NOMINAL</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="py-5" id="protocol">
+    <div class="container py-5">
+        <div class="text-center mb-5 pb-4">
+            <h2 class="fw-black display-6">The Three-Stage Protocol</h2>
+            <p class="text-muted">High-frequency placement optimization.</p>
+        </div>
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="pale-panel h-100">
+                    <div class="p-3 rounded-4 mb-4 d-inline-block" style="background: var(--accent-pale); color: var(--primary);">
+                        <i class="fas fa-project-diagram fs-4"></i>
+                    </div>
+                    <h5 class="fw-bold">01. Cognitive Mapping</h5>
+                    <p class="text-muted small">Quantifiable tracking of mastery across DSA, System Design, and Engineering Fundamentals.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="pale-panel h-100">
+                    <div class="p-3 rounded-4 mb-4 d-inline-block" style="background: #fff7ed; color: #f97316;">
+                        <i class="fas fa-shield-alt fs-4"></i>
+                    </div>
+                    <h5 class="fw-bold">02. Mock Intensity</h5>
+                    <p class="text-muted small">Simulated pressure environments featuring adaptive difficulty and real-time behavioral scoring.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="pale-panel h-100">
+                    <div class="p-3 rounded-4 mb-4 d-inline-block" style="background: #f0fdf4; color: #22c55e;">
+                        <i class="fas fa-brain fs-4"></i>
+                    </div>
+                    <h5 class="fw-bold">03. Neural Synthesis</h5>
+                    <p class="text-muted small">CV optimization utilizing neural analysis to match specific Tier-1 recruitment patterns.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<footer class="py-5 border-top text-center mt-5">
+    <p class="small text-muted opacity-50 mb-0">© 2026 PrepMaster Placement Systems. Engineered for Excellence.</p>
+</footer>
+
+<script>
+    gsap.registerPlugin(ScrollTrigger);
+
+    function toggleLandingTheme() {
+        const body = document.body;
+        const icon = document.querySelector('#theme-toggle i');
+        const isDark = body.classList.toggle('dark-theme');
+        icon.className = isDark ? 'fas fa-sun' : 'fas fa-moon';
+        localStorage.setItem('landing-theme', isDark ? 'dark' : 'light');
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const savedTheme = localStorage.getItem('landing-theme') || 'light';
+        if (savedTheme === 'dark') {
+            document.body.classList.add('dark-theme');
+            document.querySelector('#theme-toggle i').className = 'fas fa-sun';
+        }
+
+        setInterval(() => {
+            const count = Math.floor(Math.random() * (1300 - 1100) + 1100);
+            document.getElementById('node-count').innerText = count.toLocaleString();
+        }, 3000);
+
+        document.querySelectorAll('.counter').forEach(c => {
+            const target = +c.dataset.target;
+            gsap.to(c, {
+                innerText: target, duration: 2.5, snap: { innerText: 1 },
+                scrollTrigger: { trigger: "#stats-trigger", start: "top 85%" }
+            });
+        });
+    });
+</script>
+
+{% endblock %}

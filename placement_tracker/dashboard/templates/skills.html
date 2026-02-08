@@ -1,0 +1,188 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+<style>
+    :root {
+        --bg-pale: #f1f5f9; --panel-bg: #ffffff; --slate-soft: #e2e8f0;
+        --accent: #6366f1; --text-main: #1e293b; --border-solid: #cbd5e1;
+        --sidebar-width: 280px;
+    }
+    body.dark-theme {
+        --bg-pale: #0f172a !important; --panel-bg: #1e293b !important;
+        --slate-soft: #334155 !important; --accent: #818cf8 !important;
+        --text-main: #f8fafc !important; --border-solid: #475569 !important;
+    }
+    body { background-color: var(--bg-pale); color: var(--text-main); font-family: 'Plus Jakarta Sans', sans-serif; margin: 0; }
+    
+    .main-content-wrapper { 
+        margin-left: var(--sidebar-width) !important; 
+        width: calc(100% - var(--sidebar-width)) !important; 
+        padding: 0 !important; 
+        background-color: var(--bg-pale); 
+    }
+
+    .skills-container { padding: 2.5rem 3rem; max-width: 1600px; margin: 0 auto; }
+    .skills-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.5rem; width: 100%; }
+
+    .skill-card-pro {
+        background-color: var(--panel-bg); border: 2px solid var(--border-solid);
+        border-radius: 1rem; padding: 1.75rem; display: flex; flex-direction: column;
+        height: 100%; transition: transform 0.2s ease; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+    .skill-card-pro:hover { transform: translateY(-5px); border-color: var(--accent); }
+
+    .btn-action-link {
+        text-decoration: none !important; display: flex; align-items: center; justify-content: center;
+        padding: 10px; border-radius: 8px; font-weight: 800; font-size: 0.85rem; transition: 0.2s; border: none;
+    }
+    .btn-details { background-color: var(--accent); color: #fff !important; cursor: pointer; }
+    .btn-goal { background-color: var(--slate-soft); color: var(--text-main) !important; }
+
+    /* CUSTOM NO-FREEZE MODAL STYLES */
+    .custom-overlay {
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px);
+        display: none; align-items: center; justify-content: center;
+        z-index: 9999; padding: 20px;
+    }
+    .custom-overlay.active { display: flex; }
+    
+    .custom-modal-card {
+        background: var(--panel-bg); width: 100%; max-width: 550px;
+        border-radius: 1.5rem; padding: 2rem; position: relative;
+        border: 1px solid var(--border-solid); box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+    }
+
+    .btn-close-custom {
+        background: var(--slate-soft); border: none; width: 32px; height: 32px;
+        border-radius: 50%; display: flex; align-items: center; justify-content: center;
+        color: var(--text-main); transition: 0.2s;
+    }
+    .btn-close-custom:hover { background: #ef4444; color: white; transform: rotate(90deg); }
+</style>
+
+<div class="skills-container">
+    <div class="row mb-5 align-items-center">
+        <div class="col-lg-7">
+            <h1 class="fw-black text-slate-900 mb-1 display-5">Skills Lab</h1>
+            <p class="text-muted fs-5">Identify your technical gaps and track placement readiness.</p>
+        </div>
+        <div class="col-lg-5 text-lg-end">
+            <input type="text" id="skillSearch" class="form-control rounded-pill px-4 border-2" placeholder="Search competencies...">
+        </div>
+    </div>
+
+    <div id="db-skills-container">
+        <div class="skills-grid">
+            {% for skill in skills %}
+            <div class="skill-item-container">
+                <div class="skill-card-pro">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div class="p-2 rounded bg-light border"><i class="fas fa-terminal text-primary"></i></div>
+                        <span class="badge bg-primary text-white">Active Stack</span>
+                    </div>
+                    <h5 class="fw-bold mb-1 skill-name-text">{{ skill.name }}</h5>
+                    <p class="text-muted x-small mb-4">Technical competency tracking enabled.</p>
+                    
+                    <div class="row g-2 mt-auto">
+                        <div class="col-6">
+                            <button class="btn-action-link btn-details w-100" 
+                                onclick="openModal('{{ skill.name|escapejs }}', '{% if skill.description %}{{ skill.description|escapejs }}{% else %}Mastering {{ skill.name }} is vital for modern tech roles. This track covers core logic and implementation strategies.{% endif %}')">
+                                <i class="fas fa-eye me-2"></i>DETAILS
+                            </button>
+                        </div>
+                        <div class="col-6">
+                            <a href="{% url 'add_skill_goal' skill.id %}" class="btn-action-link btn-goal">SET GOAL</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<div id="skillModal" class="custom-overlay" onclick="closeModal(event)">
+    <div class="custom-modal-card animate__animated animate__zoomIn">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h4 class="fw-black mb-0" id="m-name">Skill Overview</h4>
+            <button class="btn-close-custom" onclick="closeModal(null, true)">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <div class="p-4 rounded-4 mb-3 border shadow-sm" style="background: var(--bg-pale);">
+            <p class="mb-0 fs-6 lh-base text-secondary" id="m-desc" style="min-height: 100px;"></p>
+        </div>
+        
+        <div class="p-3 rounded-4 border bg-white d-flex align-items-center justify-content-between mb-4">
+            <div class="d-flex align-items-center gap-3">
+                <div class="bg-soft-primary text-primary p-2 rounded-3" style="background: var(--slate-soft);">
+                    <i class="fas fa-graduation-cap"></i>
+                </div>
+                <div>
+                    <div class="x-small fw-bold text-muted text-uppercase">Resource Hub</div>
+                    <div class="small fw-bold">Official Guide & Courses</div>
+                </div>
+            </div>
+            <a href="#" id="m-link" target="_blank" class="btn btn-sm btn-outline-primary rounded-pill px-3 fw-bold">
+                Explore <i class="fas fa-external-link-alt ms-1 x-small"></i>
+            </a>
+        </div>
+        
+        <button class="btn btn-secondary w-100 rounded-pill fw-bold py-2" onclick="closeModal(null, true)">Dismiss</button>
+    </div>
+</div>
+
+<script>
+    const modal = document.getElementById('skillModal');
+
+    function openModal(name, desc) {
+        document.getElementById('m-name').innerText = name;
+        document.getElementById('m-desc').innerText = desc;
+        
+        // Dynamic Link Generation
+        let url = "";
+        const slug = name.toLowerCase().trim();
+        if (["python", "java", "sql", "html", "css"].some(s => slug.includes(s))) {
+            url = `https://www.w3schools.com/${slug.replace(' ', '')}/`;
+        } else {
+            url = `https://www.geeksforgeeks.org/${slug.replace(/\s+/g, '-')}/`;
+        }
+        document.getElementById('m-link').href = url;
+
+        // Display Modal
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden'; // Lock background scroll
+    }
+
+    function closeModal(e, force = false) {
+        // Only close if clicking overlay or close button
+        if (force || e.target === modal) {
+            modal.classList.remove('active');
+            document.body.style.overflow = 'auto'; // Restore scroll
+        }
+    }
+
+    // GSAP Staggered Entrance
+    window.addEventListener('DOMContentLoaded', () => {
+        gsap.from(".skill-card-pro", {
+            y: 20, opacity: 0, duration: 0.4, stagger: 0.05, ease: "power1.out"
+        });
+    });
+
+    // Live Search Filter
+    document.getElementById('skillSearch').addEventListener('keyup', (e) => {
+        const term = e.target.value.toLowerCase();
+        document.querySelectorAll('.skill-item-container').forEach(card => {
+            const title = card.querySelector('.skill-name-text').innerText.toLowerCase();
+            card.style.display = title.includes(term) ? "block" : "none";
+        });
+    });
+</script>
+
+{% endblock %}

@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+
+<style>
+    /* ... Keep all your existing root and panel styles ... */
+    :root { --bg-pale: #f8fafc; --panel-bg: #ffffff; --accent: #6366f1; --border-color: #e2e8f0; }
+    
+    /* NEW: STATS RIBBON STYLING */
+    .stats-ribbon {
+        display: flex; gap: 1.5rem; margin-bottom: 2.5rem;
+    }
+    .stat-pill {
+        background: var(--panel-bg); border: 1px solid var(--border-color);
+        padding: 1rem 1.5rem; border-radius: 1.25rem; display: flex;
+        align-items: center; gap: 12px; flex: 1; transition: 0.3s;
+    }
+    .stat-pill:hover { border-color: var(--accent); transform: translateY(-3px); }
+    .stat-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; }
+    .stat-value { font-weight: 900; font-size: 1.2rem; display: block; line-height: 1; }
+    .stat-label { font-size: 0.65rem; font-weight: 800; text-transform: uppercase; color: #64748b; }
+
+    /* Arena Grid specific fix */
+    .arena-container { padding: 2.5rem 3rem; max-width: 1600px; margin: 0 auto; }
+    .arena-grid-pro { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.5rem; }
+    .pale-panel { background: var(--panel-bg); border: 1px solid var(--border-color); border-radius: 1.5rem; padding: 1.75rem; transition: 0.3s; height: 100%; display: flex; flex-direction: column; }
+</style>
+
+<div class="arena-container">
+    
+    <header class="row mb-4 align-items-center animate__animated animate__fadeIn">
+        <div class="col-md-8">
+            <h1 class="fw-black text-slate-900 mb-1 display-5">Arena Vault ⚔️</h1>
+            <p class="text-muted fs-5">Engage in professional assessments to verify your rank.</p>
+        </div>
+    </header>
+
+    <div class="stats-ribbon animate__animated animate__fadeInUp">
+        <div class="stat-pill shadow-sm">
+            <div class="stat-icon" style="background: #ffa116;"><i class="fab fa-leetcode"></i></div>
+            <div>
+                <span class="stat-label">LeetCode Verified</span>
+                <span class="stat-value">{{ lc_solved }} Solved</span>
+            </div>
+        </div>
+        <div class="stat-pill shadow-sm">
+            <div class="stat-icon" style="background: #2f8d46;"><i class="fas fa-terminal"></i></div>
+            <div>
+                <span class="stat-label">GFG Scraped Score</span>
+                <span class="stat-value">{{ gfg_score }} Points</span>
+            </div>
+        </div>
+        <div class="stat-pill shadow-sm" style="border-style: dashed; background: transparent;">
+            <div class="stat-icon" style="background: #6366f1;"><i class="fas fa-shield-alt"></i></div>
+            <div>
+                <span class="stat-label">Sync Status</span>
+                <span class="stat-value text-primary" style="font-size: 0.9rem;">ENCRYPTED_UPLINK</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="search-filter-box shadow-sm mb-4">
+        <div class="d-flex align-items-center gap-3">
+            <i class="fas fa-search text-muted"></i>
+            <input type="text" id="arenaSearch" class="pro-input" placeholder="Filter by tech stack...">
+        </div>
+    </div>
+
+    <div class="arena-grid-pro" id="arena-grid">
+        {% for test in tests %}
+        <div class="arena-item anim-card">
+            <div class="pale-panel">
+                <div class="tag-row">
+                    <span class="tag">60 Mins</span>
+                    <span class="tag q-badge">{{ test.questions.count|default:"35" }} Questions</span>
+                </div>
+                
+                <h5 class="fw-bold mb-2">{{ test.name }}</h5>
+                <p class="text-muted small mb-4 flex-grow-1">{{ test.description }}</p>
+
+                <div class="pt-3 border-top mt-auto">
+                    <a href="{% url 'take_mock_test' test.id %}" class="btn btn-primary w-100 rounded-pill fw-bold shadow-sm">
+                        ENTER ARENA <i class="fas fa-chevron-right ms-2"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<script>
+    window.addEventListener('load', () => {
+        gsap.from(".anim-card", { y: 30, opacity: 0, duration: 0.6, stagger: 0.05, ease: "power2.out" });
+        
+        // Live Filter logic remains same
+        document.getElementById('arenaSearch').addEventListener('keyup', (e) => {
+            const term = e.target.value.toLowerCase();
+            document.querySelectorAll('.arena-item').forEach(item => {
+                const text = item.querySelector('h5').innerText.toLowerCase();
+                item.style.display = text.includes(term) ? "block" : "none";
+            });
+        });
+    });
+</script>
+
+{% endblock %}

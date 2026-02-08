@@ -1,0 +1,132 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+
+<style>
+    :root { --accent: #6366f1; --bg-pale: #f8fafc; }
+    
+    /* Battle Layout */
+    .arena-grid { display: grid; grid-template-columns: 1fr 320px; gap: 2rem; align-items: start; }
+    
+    .question-card {
+        background: white; border-radius: 1.5rem; padding: 2.5rem;
+        border: 1px solid #e2e8f0; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05);
+        margin-bottom: 2rem; position: relative;
+    }
+
+    /* Option Styling: Professional Radio Buttons */
+    .option-container { position: relative; margin-bottom: 12px; }
+    .option-input { display: none; }
+    .option-label {
+        display: flex; align-items: center; padding: 1.25rem 1.5rem;
+        background: var(--bg-pale); border: 2px solid #e2e8f0;
+        border-radius: 12px; cursor: pointer; transition: 0.2s; font-weight: 600;
+    }
+    .option-input:checked + .option-label {
+        border-color: var(--accent); background: #eef2ff; color: var(--accent);
+    }
+    .option-label:hover { border-color: #cbd5e1; }
+
+    /* Sidebar HUD */
+    .hud-card { background: #0f172a; color: white; border-radius: 1.25rem; padding: 1.5rem; text-align: center; }
+    .nav-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-top: 1rem; }
+    .nav-dot {
+        width: 40px; height: 40px; border-radius: 8px; background: #334155;
+        display: flex; align-items: center; justify-content: center;
+        color: white; text-decoration: none; font-size: 0.8rem; font-weight: 700;
+    }
+    .nav-dot.active { background: var(--accent); }
+    
+    @media (max-width: 992px) { .arena-grid { grid-template-columns: 1fr; } }
+</style>
+
+<div class="container-fluid animate__animated animate__fadeIn">
+    <div class="d-flex justify-content-between align-items-end mb-4">
+        <div>
+            <h2 class="fw-black mb-0">{{ test.name }}</h2>
+            <p class="text-muted mb-0"><i class="fas fa-info-circle me-1"></i> Mode: Professional Assessment</p>
+        </div>
+        <button class="btn btn-outline-danger rounded-pill px-4 fw-bold" onclick="abortBattle()">ABORT BATTLE</button>
+    </div>
+
+    <div class="arena-grid">
+        <form method="POST" id="battleForm">
+            {% csrf_token %}
+            {% for q in questions %}
+            <div class="question-card animate__animated animate__fadeInUp" id="q-block-{{ forloop.counter }}">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <span class="badge bg-primary rounded-pill">Question {{ forloop.counter }}</span>
+                </div>
+                
+                <h4 class="fw-bold mb-4" style="line-height: 1.5;">{{ q.question|safe }}</h4>
+
+                <div class="options-wrapper">
+                    {% for option in q.options %}
+                    <div class="option-container">
+                        <input type="radio" name="{{ q.id }}" id="opt-{{ q.id }}-{{ forloop.index }}" 
+                               value="{{ option }}" class="option-input" required onchange="markDot({{ forloop.parentloop.counter }})">
+                        <label class="option-label" for="opt-{{ q.id }}-{{ forloop.index }}">
+                            {{ option|safe }}
+                        </label>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endfor %}
+
+            <div class="question-card text-center bg-light border-dashed">
+                <h5 class="fw-bold">All targets engaged?</h5>
+                <p class="text-muted small">Verify all questions before finalizing uplink.</p>
+                <button type="submit" class="btn btn-primary btn-lg rounded-pill px-5 shadow-lg fw-black">SUBMIT ASSESSMENT</button>
+            </div>
+        </form>
+
+        <div class="sticky-top" style="top: 100px;">
+            <div class="hud-card shadow-lg mb-4">
+                <small class="text-uppercase opacity-50 fw-bold">Time Remaining</small>
+                <h1 class="fw-black mb-0" id="timer">45:00</h1>
+            </div>
+
+            <div class="question-card">
+                <h6 class="fw-bold mb-3 text-uppercase">Question Map</h6>
+                <div class="nav-grid">
+                    {% for q in questions %}
+                    <a href="#q-block-{{ forloop.counter }}" class="nav-dot" id="dot-{{ forloop.counter }}">{{ forloop.counter }}</a>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Battle Timer Logic
+    let timeLeft = 2700; // 45 Minutes
+    const timerDisplay = document.getElementById('timer');
+
+    const countdown = setInterval(() => {
+        timeLeft--;
+        let mins = Math.floor(timeLeft / 60);
+        let secs = timeLeft % 60;
+        timerDisplay.innerHTML = `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+        
+        if (timeLeft <= 300) timerDisplay.style.color = "#ef4444";
+        if (timeLeft <= 0) {
+            clearInterval(countdown);
+            document.getElementById('battleForm').submit();
+        }
+    }, 1000);
+
+    function markDot(num) {
+        document.getElementById(`dot-${num}`).classList.add('active');
+    }
+
+    function abortBattle() {
+        if(confirm("Aborting will result in a 0% score for this session. Proceed?")) {
+            window.location.href = "{% url 'mock_tests' %}";
+        }
+    }
+</script>
+
+{% endblock %}

@@ -1,0 +1,268 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+
+<style>
+    :root {
+        --bg-pale: #f8fafc;
+        --panel-bg: #ffffff;
+        --slate-soft: #f1f5f9;
+        --accent: #6366f1;
+        --text-main: #1e293b;
+        --border-color: #e2e8f0;
+        --sidebar-width: 280px;
+    }
+
+    body.dark-theme {
+        --bg-pale: #0d0f14 !important;
+        --panel-bg: #161922 !important;
+        --slate-soft: #1f232d !important;
+        --accent: #a5b4fc !important;
+        --text-main: #f8fafc !important;
+        --text-muted: #94a3b8 !important;
+        --border-color: #2d3343 !important;
+    }
+
+    body {
+        background-color: var(--bg-pale);
+        color: var(--text-main);
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        margin: 0;
+        overflow-x: hidden;
+    }
+
+    /* Seamless Sidebar-to-Content Alignment */
+    .main-content-wrapper {
+        margin-left: var(--sidebar-width) !important;
+        width: calc(100% - var(--sidebar-width)) !important;
+        padding: 0 !important;
+    }
+
+    .hub-container {
+        padding: 2.5rem 3rem;
+        max-width: 1600px;
+        margin: 0 auto;
+    }
+
+    /* Professional Search Header */
+    .search-panel-pro {
+        background: var(--panel-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 1.5rem;
+        padding: 1.5rem;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    }
+
+    .glass-input-wrapper {
+        position: relative;
+        width: 100%;
+    }
+
+    .glass-input-wrapper i {
+        position: absolute;
+        left: 18px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-muted);
+    }
+
+    .pro-search-input {
+        background: var(--slate-soft);
+        border: 1px solid var(--border-color);
+        border-radius: 50px;
+        padding: 12px 12px 12px 48px;
+        color: var(--text-main);
+        width: 100%;
+        transition: 0.3s;
+    }
+
+    .pro-search-input:focus {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+        outline: none;
+    }
+
+    /* Advanced Company Cards */
+    .company-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+        gap: 1.5rem;
+    }
+
+    .company-card-pro {
+        background: var(--panel-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 1.5rem;
+        padding: 2rem;
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        cursor: pointer;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+    }
+
+    .company-card-pro:hover {
+        transform: translateY(-10px);
+        border-color: var(--accent);
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+    }
+
+    .logo-container {
+        width: 64px;
+        height: 64px;
+        background: var(--slate-soft);
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 800;
+        font-size: 1.5rem;
+        color: var(--accent);
+        border: 1px solid var(--border-color);
+    }
+
+    .status-badge-pro {
+        font-size: 0.65rem;
+        font-weight: 800;
+        padding: 5px 12px;
+        border-radius: 50px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .status-active { background: #dcfce7; color: #15803d; }
+
+    .tech-tag {
+        font-size: 0.7rem;
+        font-weight: 700;
+        background: var(--slate-soft);
+        color: var(--text-main);
+        padding: 4px 10px;
+        border-radius: 8px;
+    }
+
+    @media (max-width: 768px) { .company-grid { grid-template-columns: 1fr; } }
+</style>
+
+<div class="hub-container animate__animated animate__fadeIn">
+    
+    <div class="row mb-5 align-items-center">
+        <div class="col-lg-7">
+            <h1 class="fw-black text-slate-900 mb-1 display-5">Company Hub 🏢</h1>
+            <p class="text-muted fs-5">Identify recruitment patterns and strategically target dream organizations.</p>
+        </div>
+        <div class="col-lg-5 text-lg-end">
+            <button class="btn theme-toggle-btn ms-auto" onclick="toggleThemeEngine()">
+                <i class="fas fa-moon"></i>
+            </button>
+        </div>
+    </div>
+
+    <div class="search-panel-pro mb-5">
+        <div class="row g-3">
+            <div class="col-md-8">
+                <div class="glass-input-wrapper">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="companySearch" class="pro-search-input" placeholder="Search by name, tech stack, or location...">
+                </div>
+            </div>
+            <div class="col-md-4">
+                <select class="pro-search-input py-2" style="padding-left: 20px;">
+                    <option selected>All Industries</option>
+                    <option>FinTech</option>
+                    <option>SaaS / Product</option>
+                    <option>FAANG+</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <div class="company-grid" id="company-wrapper">
+        {% for company in companies %}
+        <div class="company-item-container anim-card">
+            <div class="company-card-pro" onclick="window.location.href='{% url 'company_detail' company.id %}'">
+                <div class="d-flex justify-content-between align-items-start mb-4">
+                    <div class="logo-container">
+                        {{ company.name|slice:":1" }}
+                    </div>
+                    <span class="status-badge-pro status-active">
+                        <i class="fas fa-bolt me-1"></i> Hiring
+                    </span>
+                </div>
+
+                <h4 class="fw-bold mb-1">{{ company.name }}</h4>
+                <p class="text-muted small mb-4"><i class="fas fa-map-marker-alt me-1"></i> Bangalore / Remote</p>
+                
+                <p class="text-muted small leading-relaxed mb-4 flex-grow-1">
+                    {{ company.description|truncatechars:100 }}
+                </p>
+
+                <div class="d-flex flex-wrap gap-2 mb-4">
+                    <span class="tech-tag">Java</span>
+                    <span class="tech-tag">Distributed Systems</span>
+                    <span class="tech-tag">AWS</span>
+                </div>
+
+                <div class="mt-auto pt-4 border-top d-flex justify-content-between align-items-center">
+                    <div>
+                        <small class="text-muted fw-bold text-uppercase d-block" style="font-size: 0.6rem;">Est. Package</small>
+                        <span class="fw-bold text-primary">14 - 22 LPA</span>
+                    </div>
+                    <i class="fas fa-arrow-right text-muted"></i>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12 text-center py-5">
+            <img src="https://cdn-icons-png.flaticon.com/512/7486/7486744.png" width="80" class="opacity-25 mb-3">
+            <h5 class="text-muted">Target list empty. Start identifying organizations.</h5>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="pale-panel mt-5 border-0 shadow-lg" style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); color: white;">
+        <div class="row align-items-center p-3">
+            <div class="col-md-8">
+                <h4 class="fw-bold mb-2">Structured Preparation Pipeline</h4>
+                <p class="small opacity-75 mb-0">Use this hub to track interview stages from initial OA to final HR rounds for each target organization.</p>
+            </div>
+            <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- GSAP HUB ENTRANCE ---
+    window.addEventListener('load', () => {
+        gsap.from(".anim-card", {
+            y: 40,
+            opacity: 0,
+            duration: 0.8,
+            stagger: 0.1,
+            ease: "power3.out"
+        });
+    });
+
+    // --- REAL-TIME SEARCH ---
+    document.getElementById('companySearch').addEventListener('keyup', (e) => {
+        const term = e.target.value.toLowerCase();
+        document.querySelectorAll('.company-item-container').forEach(card => {
+            const name = card.querySelector('h4').innerText.toLowerCase();
+            card.style.display = name.includes(term) ? "block" : "none";
+        });
+    });
+
+    // --- THEME ENGINE ---
+    function toggleThemeEngine() {
+        document.body.classList.toggle('dark-theme');
+        const isDark = document.body.classList.contains('dark-theme');
+        localStorage.setItem('pro-theme', isDark ? 'dark' : 'light');
+    }
+    if(localStorage.getItem('pro-theme') === 'dark') document.body.classList.add('dark-theme');
+</script>
+
+{% endblock %}

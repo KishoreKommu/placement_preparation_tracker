@@ -1,0 +1,225 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+<style>
+    /* 1. RESET & ARCHITECTURE */
+    .sidebar-wrapper, .top-header { display: none !important; }
+    .main-content-wrapper { margin-left: 0 !important; width: 100vw !important; padding: 0 !important; }
+
+    :root {
+        --auth-bg: #f8fafc; --auth-card: #ffffff; --auth-text: #1e293b;
+        --auth-border: #e2e8f0; --primary: #6366f1; --danger: #ef4444; --success: #10b981;
+    }
+
+    body.dark-theme {
+        --auth-bg: #0d0f14; --auth-card: #161922; --auth-text: #f8fafc; --auth-border: #2d3343;
+    }
+
+    body { background-color: var(--auth-bg); min-height: 100vh; display: flex; flex-direction: column; transition: background 0.3s ease; overflow-x: hidden; }
+
+    /* 2. NAVIGATION */
+    .auth-nav { 
+        width: 100%; padding: 1rem 4rem; background: var(--auth-card); 
+        display: flex; justify-content: space-between; align-items: center; 
+        border-bottom: 1px solid var(--auth-border); 
+    }
+
+    .brand-link { display: flex; align-items: center; gap: 10px; text-decoration: none !important; color: var(--auth-text); }
+
+    /* 3. CENTERED CONTAINER */
+    .auth-container { flex: 1; display: flex; align-items: center; justify-content: center; padding: 2rem 1.5rem; }
+    .auth-card { 
+        background: var(--auth-card); border: 1px solid var(--auth-border); 
+        border-radius: 1.5rem; padding: 2.5rem; width: 100%; max-width: 550px; 
+        color: var(--auth-text); box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05); 
+    }
+
+    /* 4. FORM FIELDS */
+    .form-control-pro { 
+        background: var(--auth-bg); border: 1px solid var(--auth-border); 
+        border-radius: 10px; padding: 12px 16px; color: var(--auth-text); 
+        width: 100%; transition: 0.2s; outline: none; 
+    }
+    .form-control-pro:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1); }
+    
+    .validation-msg { font-size: 0.72rem; font-weight: 700; margin-top: 6px; display: none; }
+    
+    /* 5. STRENGTH METER */
+    .strength-meter { height: 4px; width: 100%; background: var(--auth-border); border-radius: 2px; margin-top: 8px; overflow: hidden; }
+    .strength-bar { height: 100%; width: 0%; transition: 0.4s ease; }
+
+    .btn-auth-submit { 
+        background: var(--primary); color: white; border: none; border-radius: 10px; 
+        padding: 14px; font-weight: 700; width: 100%; transition: 0.2s; cursor: pointer; 
+    }
+    .btn-auth-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .theme-btn { 
+        background: none; border: 1px solid var(--auth-border); color: var(--primary); 
+        width: 38px; height: 38px; border-radius: 8px; cursor: pointer; 
+    }
+
+    .x-small { font-size: 0.65rem; }
+</style>
+
+<header class="auth-nav">
+    <a href="/" class="brand-link">
+        <div class="bg-primary text-white rounded-2 p-2"><i class="fas fa-bolt"></i></div>
+        <span class="fw-bold fs-5">PrepMaster</span>
+    </a>
+
+    <div class="d-flex align-items-center gap-3">
+        <button class="theme-btn" onclick="toggleAuthTheme()" id="auth-theme-toggle">
+            <i class="fas fa-moon"></i>
+        </button>
+        <a href="/" class="btn btn-sm btn-light border rounded-2 fw-bold px-3 d-none d-md-block" style="color: var(--auth-text);">
+            <i class="fas fa-home me-1 small"></i> Home
+        </a>
+    </div>
+</header>
+
+<main class="auth-container">
+    <div class="auth-card animate__animated animate__fadeIn animate__faster">
+        <div class="text-center mb-4">
+            <h3 class="fw-bold mb-1">Create Account</h3>
+            <p class="text-muted small">Join the cohort of elite engineers.</p>
+        </div>
+
+        {% if messages %}
+            {% for msg in messages %}
+            <div class="alert alert-danger border-0 py-2 small mb-3 rounded-3">
+                <i class="fas fa-exclamation-circle me-1"></i> {{ msg }}
+            </div>
+            {% endfor %}
+        {% endif %}
+
+        <form method="POST" id="registerForm">
+            {% csrf_token %}
+            <div class="row g-3 mb-3">
+                <div class="col-md-6">
+                    <label class="x-small fw-bold text-muted text-uppercase mb-2">Username</label>
+                    <input type="text" name="username" class="form-control-pro" placeholder="Choose ID" required minlength="4">
+                </div>
+                <div class="col-md-6">
+                    <label class="x-small fw-bold text-muted text-uppercase mb-2">Email Address</label>
+                    <input type="email" name="email" id="email" class="form-control-pro" placeholder="name@college.edu" required>
+                </div>
+                <div id="emailError" class="validation-msg text-danger px-2"><i class="fas fa-times-circle me-1"></i>Invalid email format.</div>
+            </div>
+
+            <div class="row g-3 mb-3">
+                <div class="col-md-6">
+                    <label class="x-small fw-bold text-muted text-uppercase mb-2">Password</label>
+                    <input type="password" name="password" id="password" class="form-control-pro" placeholder="Min. 8 characters" required>
+                    <div class="strength-meter">
+                        <div id="strengthBar" class="strength-bar"></div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <label class="x-small fw-bold text-muted text-uppercase mb-2">Confirm Password</label>
+                    <input type="password" name="confirm" id="confirm" class="form-control-pro" placeholder="Repeat password" required>
+                </div>
+                <div id="complexityError" class="validation-msg text-danger px-2">
+                    <i class="fas fa-shield-alt me-1"></i>Need A-Z, a-z, 0-9, and symbols.
+                </div>
+                <div id="matchError" class="validation-msg text-danger px-2"><i class="fas fa-check-double me-1"></i>Passwords do not match.</div>
+            </div>
+
+            <div class="row g-3 mb-4">
+                <div class="col-md-6">
+                    <label class="x-small fw-bold text-muted text-uppercase mb-2">
+                        <i class="fab fa-leetcode me-1" style="color: #FFA116;"></i> LeetCode Username
+                    </label>
+                    <input type="text" name="leetcode_username" class="form-control-pro" placeholder="e.g. kishore_123">
+                </div>
+                <div class="col-md-6">
+                    <label class="x-small fw-bold text-muted text-uppercase mb-2">
+                        <i class="fas fa-code me-1" style="color: #2F8D46;"></i> GFG Username
+                    </label>
+                    <input type="text" name="gfg_username" class="form-control-pro" placeholder="e.g. kishore_kommu">
+                </div>
+            </div>
+
+            <button type="submit" id="submitBtn" class="btn-auth-submit mb-3">
+                Initialize Account
+            </button>
+        </form>
+
+        <div class="text-center">
+            <p class="small text-muted mb-0">
+                Already registered? <a href="{% url 'login' %}" class="text-primary fw-bold text-decoration-none">Log In</a>
+            </p>
+        </div>
+    </div>
+</main>
+
+<footer class="py-4 text-center border-top">
+    <p class="x-small text-muted mb-0">© 2026 PrepMaster Placement Systems. Engineered for Excellence.</p>
+</footer>
+
+<script>
+    const password = document.getElementById('password');
+    const confirm = document.getElementById('confirm');
+    const email = document.getElementById('email');
+    const submitBtn = document.getElementById('submitBtn');
+    
+    const complexityError = document.getElementById('complexityError');
+    const matchError = document.getElementById('matchError');
+    const emailError = document.getElementById('emailError');
+    const strengthBar = document.getElementById('strengthBar');
+
+    function checkComplexity(pw) {
+        const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+        return regex.test(pw);
+    }
+
+    function updateStrengthMeter(pw) {
+        let strength = 0;
+        if (pw.match(/[a-z]+/)) strength++;
+        if (pw.match(/[A-Z]+/)) strength++;
+        if (pw.match(/[0-9]+/)) strength++;
+        if (pw.match(/[@$!%*?&]+/)) strength++;
+        if (pw.length >= 8) strength++;
+
+        const colors = ['#ef4444', '#f97316', '#eab308', '#84cc16', '#10b981'];
+        strengthBar.style.width = (strength * 20) + '%';
+        strengthBar.style.backgroundColor = colors[strength - 1] || '#e2e8f0';
+    }
+
+    function validate() {
+        let isComplexityOk = checkComplexity(password.value);
+        let isMatchOk = confirm.value && password.value === confirm.value;
+        let isEmailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value);
+
+        complexityError.style.display = (password.value && !isComplexityOk) ? 'block' : 'none';
+        matchError.style.display = (confirm.value && !isMatchOk) ? 'block' : 'none';
+        emailError.style.display = (email.value && !isEmailOk) ? 'block' : 'none';
+
+        updateStrengthMeter(password.value);
+        submitBtn.disabled = !(isComplexityOk && isMatchOk && isEmailOk);
+    }
+
+    password.addEventListener('input', validate);
+    confirm.addEventListener('input', validate);
+    email.addEventListener('input', validate);
+
+    function toggleAuthTheme() {
+        const body = document.body;
+        const icon = document.querySelector('#auth-theme-toggle i');
+        const isDark = body.classList.toggle('dark-theme');
+        icon.className = isDark ? 'fas fa-sun' : 'fas fa-moon';
+        localStorage.setItem('auth-theme', isDark ? 'dark' : 'light');
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        if (localStorage.getItem('auth-theme') === 'dark') {
+            document.body.classList.add('dark-theme');
+            document.querySelector('#auth-theme-toggle i').className = 'fas fa-sun';
+        }
+    });
+</script>
+
+{% endblock %}
