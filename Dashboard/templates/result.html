@@ -1,0 +1,260 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<style>
+    :root {
+        /* Adaptive color palette based on performance percentage */
+        --score-color: {% if percentage >= 70 %}#10b981{% else %}#6366f1{% endif %};
+        --score-bg-soft: {% if percentage >= 70 %}rgba(16, 185, 129, 0.08){% else %}rgba(99, 102, 241, 0.08){% endif %};
+        --card-shadow: 0 20px 40px rgba(0, 0, 0, 0.04);
+    }
+
+    .result-wrapper {
+        max-width: 1000px;
+        margin: 40px auto;
+        animation: fadeIn 0.8s ease-out;
+    }
+
+    /* --- PERFORMANCE HEADER --- */
+    .performance-header {
+        background: white;
+        border-radius: 32px;
+        padding: 4rem 2rem;
+        text-align: center;
+        border: 1px solid rgba(0,0,0,0.05);
+        box-shadow: var(--card-shadow);
+        position: relative;
+        overflow: hidden;
+        margin-bottom: 40px;
+    }
+
+    .performance-header::after {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; width: 100%; height: 6px;
+        background: var(--score-color);
+    }
+
+    .status-indicator {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 24px;
+        border-radius: 100px;
+        background: var(--score-bg-soft);
+        color: var(--score-color);
+        font-weight: 800;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 2rem;
+    }
+
+    /* --- CIRCULAR ANALYTICS --- */
+    .gauge-container {
+        position: relative;
+        width: 200px;
+        height: 200px;
+        margin: 0 auto 2.5rem;
+    }
+
+    .gauge-circle {
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        background: conic-gradient(var(--score-color) {{ percentage }}%, #f1f5f9 0);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+    }
+
+    .gauge-inner {
+        width: 80%;
+        height: 80%;
+        background: white;
+        border-radius: 50%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .gauge-val {
+        font-size: 3.5rem;
+        font-weight: 900;
+        color: var(--text-dark);
+        line-height: 1;
+    }
+
+    .gauge-label {
+        font-size: 0.8rem;
+        font-weight: 700;
+        color: var(--text-muted);
+        text-transform: uppercase;
+    }
+
+    /* --- METRIC GRID --- */
+    .metric-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 20px;
+    }
+
+    .metric-card {
+        padding: 1.5rem;
+        background: var(--bg-main);
+        border-radius: 20px;
+        border: 1px solid rgba(0,0,0,0.02);
+        transition: 0.3s;
+    }
+
+    .metric-card:hover { transform: translateY(-5px); background: #fff; box-shadow: 0 10px 20px rgba(0,0,0,0.02); }
+
+    .metric-label { display: block; font-size: 0.65rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; margin-bottom: 8px; }
+    .metric-value { font-size: 1.8rem; font-weight: 800; color: var(--text-dark); }
+
+    /* --- RESPONSE INTELLIGENCE TABLE --- */
+    .review-panel {
+        background: white;
+        border-radius: 28px;
+        overflow: hidden;
+        border: 1px solid rgba(0,0,0,0.05);
+        box-shadow: var(--card-shadow);
+    }
+
+    .table-header { padding: 1.5rem 2rem; border-bottom: 1px solid var(--bg-main); }
+
+    .review-table th { background: var(--bg-main); font-weight: 800; font-size: 0.7rem; text-transform: uppercase; padding: 1.2rem 2rem; border: none; }
+    .review-table td { padding: 1.5rem 2rem; vertical-align: middle; border-bottom: 1px solid var(--bg-main); }
+
+    .q-text { font-weight: 700; color: var(--text-dark); margin-bottom: 4px; display: block; }
+    .match-status { padding: 6px 14px; border-radius: 10px; font-weight: 800; font-size: 0.7rem; text-transform: uppercase; }
+    .status-match { background: #d1fae5; color: #065f46; }
+    .status-mismatch { background: #fee2e2; color: #991b1b; }
+
+    /* --- ACTIONS --- */
+    .btn-action-lg {
+        padding: 16px 40px;
+        border-radius: 18px;
+        font-weight: 800;
+        transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        border: none;
+    }
+
+    .btn-retake { background: var(--primary); color: white; box-shadow: 0 10px 20px var(--primary-glow); }
+    .btn-retake:hover { transform: translateY(-4px); box-shadow: 0 15px 30px var(--primary-glow); color: white; }
+    
+    .btn-exit { background: var(--bg-main); color: var(--text-muted); }
+    .btn-exit:hover { background: #e2e8f0; color: var(--text-dark); }
+
+</style>
+
+<div class="result-wrapper">
+    
+    <div class="mb-4">
+        <a href="{% url 'mock_tests' %}" class="text-decoration-none text-muted fw-bold small">
+            <i class="fas fa-arrow-left me-2"></i> RETURN TO ARENA
+        </a>
+    </div>
+
+    <div class="performance-header">
+        <div class="status-indicator">
+            <i class="fas fa-{% if percentage >= 70 %}shield-check{% else %}microscope{% endif %}"></i>
+            {% if percentage >= 70 %}Placement Qualified{% else %}In-Depth Analysis Required{% endif %}
+        </div>
+
+        <h1 class="fw-black mb-1" style="letter-spacing: -2px;">{{ test.name }}</h1>
+        <p class="text-muted mb-5">Technical validation complete for account <b>{{ request.user.username }}</b></p>
+
+        <div class="gauge-container">
+            <div class="gauge-circle">
+                <div class="gauge-inner">
+                    <span class="gauge-val">{{ percentage }}%</span>
+                    <span class="gauge-label">Score</span>
+                </div>
+            </div>
+        </div>
+
+        <h2 class="fw-black">
+            {% if percentage >= 90 %}Legendary Status! 🚀
+            {% elif percentage >= 70 %}Ready for Production. 💎
+            {% else %}System Calibration Needed. ⚙️{% endif %}
+        </h2>
+
+        <div class="container px-lg-5 mt-5">
+            <div class="metric-grid">
+                <div class="metric-card">
+                    <span class="metric-label">Total Questions</span>
+                    <span class="metric-value">{{ total }}</span>
+                </div>
+                <div class="metric-card">
+                    <span class="metric-label">Correct Hits</span>
+                    <span class="metric-value text-success">{{ score }}</span>
+                </div>
+                <div class="metric-card">
+                    <span class="metric-label">Logic Errors</span>
+                    <span class="metric-value text-danger">
+                        {% with total_questions=total correct_answers=score %}
+                            {{ total_questions|add:"-0"|add:correct_answers|add:"-0" }}
+                            {# If score_neg isn't passed, we calculate total - score #}
+                            {% if errors %}{{ errors }}{% else %}{{ total|add:"-0"|add:score_neg }}{% endif %}
+                        {% endwith %}
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="review-panel mb-5">
+        <div class="table-header d-flex justify-content-between align-items-center">
+            <h5 class="fw-black m-0"><i class="fas fa-brain me-2 text-primary"></i>Response Intelligence</h5>
+            <span class="badge bg-light text-muted fw-bold">Live Breakdown</span>
+        </div>
+        <div class="table-responsive">
+            <table class="table review-table m-0">
+                <thead>
+                    <tr>
+                        <th>Node Context</th>
+                        <th class="text-center">Protocol</th>
+                        <th>Target Answer</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for r in results %}
+                    <tr>
+                        <td style="max-width: 400px;">
+                            <span class="q-text small">{{ r.question|safe|truncatewords:15 }}</span>
+                        </td>
+                        <td class="text-center">
+                            {% if r.is_correct %}
+                                <span class="match-status status-match"><i class="fas fa-check-circle me-1"></i> Match</span>
+                            {% else %}
+                                <span class="match-status status-mismatch"><i class="fas fa-times-circle me-1"></i> Error</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="text-primary fw-bold small">{{ r.correct_ans }}</span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="text-center mb-5 pb-5">
+        <a href="{% url 'mock_tests' %}" class="btn-action-lg btn-retake me-3">
+            <i class="fas fa-redo"></i> RETAKE ASSESSMENT
+        </a>
+        <a href="{% url 'dashboard' %}" class="btn-action-lg btn-exit">
+            <i class="fas fa-chart-pie"></i> VIEW DASHBOARD
+        </a>
+    </div>
+
+</div>
+
+{% endblock %}

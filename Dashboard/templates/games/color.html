@@ -1,0 +1,247 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+    :root {
+        --game-primary: #6366f1;
+        --game-success: #10b981;
+        --game-danger: #ef4444;
+    }
+
+    .game-container {
+        max-width: 600px;
+        margin: 40px auto;
+        padding: 20px;
+        text-align: center;
+        animation: fadeIn 0.8s ease-out;
+    }
+
+    /* --- DASHBOARD --- */
+    .game-stats {
+        display: flex;
+        justify-content: space-around;
+        margin-bottom: 30px;
+        background: var(--sidebar-bg);
+        padding: 20px;
+        border-radius: 24px;
+        border: 1px solid var(--primary-glow);
+        box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+    }
+
+    .stat-box { text-align: center; }
+    .stat-label { font-size: 0.7rem; font-weight: 800; text-transform: uppercase; color: var(--text-muted); display: block; }
+    .stat-value { font-size: 1.8rem; font-weight: 800; color: var(--primary); }
+
+    /* --- THE CHALLENGE CARD --- */
+    .challenge-card {
+        background: white;
+        padding: 60px 20px;
+        border-radius: 32px;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.03);
+        margin-bottom: 40px;
+        position: relative;
+        overflow: hidden;
+        border: 1px solid var(--border-soft);
+    }
+
+    #word-display {
+        font-size: 5rem;
+        font-weight: 900;
+        letter-spacing: -3px;
+        margin: 0;
+        transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    /* --- PROGRESS TIMER --- */
+    .timer-bar-container {
+        width: 100%;
+        height: 6px;
+        background: var(--bg-main);
+        position: absolute;
+        bottom: 0;
+        left: 0;
+    }
+    #timer-fill {
+        height: 100%;
+        width: 100%;
+        background: var(--primary);
+        transition: width 0.1s linear;
+    }
+
+    /* --- CONTROLS --- */
+    .btn-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+    }
+
+    .game-btn {
+        padding: 20px;
+        border-radius: 20px;
+        font-size: 1.2rem;
+        font-weight: 800;
+        border: none;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .btn-yes { background: var(--game-success); color: white; box-shadow: 0 10px 20px rgba(16, 185, 129, 0.3); }
+    .btn-no { background: var(--game-danger); color: white; box-shadow: 0 10px 20px rgba(239, 68, 68, 0.3); }
+    
+    .game-btn:hover { transform: translateY(-5px); filter: brightness(1.1); }
+    .game-btn:active { transform: translateY(0) scale(0.95); }
+
+    /* --- FEEDBACK --- */
+    .flash-correct { animation: correctFlash 0.4s; }
+    .flash-wrong { animation: wrongFlash 0.4s; }
+
+    @keyframes correctFlash { 0%, 100% { background: white; } 50% { background: #d1fae5; } }
+    @keyframes wrongFlash { 0%, 100% { background: white; } 50% { background: #fee2e2; } }
+
+    .btn-back {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        color: var(--text-muted);
+        text-decoration: none;
+        font-weight: 700;
+        margin-bottom: 20px;
+        transition: 0.3s;
+    }
+    .btn-back:hover { color: var(--primary); transform: translateX(-5px); }
+
+</style>
+
+<div class="game-container">
+    <div class="text-start">
+        <a href="{% url 'games' %}" class="btn-back">
+            <i class="fas fa-chevron-left"></i> Exit to Lab
+        </a>
+    </div>
+
+    <div class="mb-4">
+        <h2 class="fw-black mb-1">Color Switch</h2>
+        <p class="text-muted small">Does the <b>Word</b> match the <b>Color</b>?</p>
+    </div>
+
+    <div class="game-stats">
+        <div class="stat-box">
+            <span class="stat-label">Score</span>
+            <span id="score-val" class="stat-value">0</span>
+        </div>
+        <div class="stat-box">
+            <span class="stat-label">Best Streak</span>
+            <span id="streak-val" class="stat-value text-success">0</span>
+        </div>
+    </div>
+
+    <div class="challenge-card" id="main-card">
+        <h1 id="word-display">READY?</h1>
+        <div class="timer-bar-container">
+            <div id="timer-fill"></div>
+        </div>
+    </div>
+
+    <div class="btn-grid">
+        <button class="game-btn btn-no" onclick="handleInput(false)">
+            <i class="fas fa-times me-2"></i> False
+        </button>
+        <button class="game-btn btn-yes" onclick="handleInput(true)">
+            <i class="fas fa-check me-2"></i> True
+        </button>
+    </div>
+</div>
+
+<script>
+    const colors = ["Red", "Green", "Blue", "Orange", "Purple"];
+    const colorValues = {
+        Red: "#ef4444",
+        Green: "#10b981",
+        Blue: "#3b82f6",
+        Orange: "#f59e0b",
+        Purple: "#8b5cf6"
+    };
+
+    let currentWord, currentColor;
+    let score = 0;
+    let streak = 0;
+    let maxStreak = 0;
+    let timeLeft = 100;
+    let gameInterval;
+
+    const display = document.getElementById("word-display");
+    const card = document.getElementById("main-card");
+    const timerFill = document.getElementById("timer-fill");
+
+    function nextChallenge() {
+        // Reset Timer
+        timeLeft = 100;
+        
+        // Randomize
+        currentWord = colors[Math.floor(Math.random() * colors.length)];
+        currentColor = colors[Math.floor(Math.random() * colors.length)];
+
+        // Update UI
+        display.innerText = currentWord;
+        display.style.color = colorValues[currentColor];
+        
+        // Simple scale animation
+        display.style.transform = "scale(1.2)";
+        setTimeout(() => display.style.transform = "scale(1)", 100);
+    }
+
+    function handleInput(userSaysYes) {
+        const actualMatch = (currentWord === currentColor);
+        const isCorrect = (userSaysYes === actualMatch);
+
+        if (isCorrect) {
+            score += 10 + (streak * 2);
+            streak++;
+            if (streak > maxStreak) maxStreak = streak;
+            
+            card.classList.add("flash-correct");
+            setTimeout(() => card.classList.remove("flash-correct"), 400);
+        } else {
+            score = Math.max(0, score - 15);
+            streak = 0;
+            
+            card.classList.add("flash-wrong");
+            setTimeout(() => card.classList.remove("flash-wrong"), 400);
+        }
+
+        updateDashboard();
+        nextChallenge();
+    }
+
+    function updateDashboard() {
+        document.getElementById("score-val").innerText = score;
+        document.getElementById("streak-val").innerText = maxStreak;
+    }
+
+    function startTimer() {
+        gameInterval = setInterval(() => {
+            timeLeft -= 1.5; // Difficulty speed
+            timerFill.style.width = timeLeft + "%";
+
+            if (timeLeft <= 0) {
+                streak = 0;
+                handleInput(! (currentWord === currentColor)); // Force a 'wrong' to reset
+                nextChallenge();
+            }
+        }, 100);
+    }
+
+    // Initial Start
+    updateDashboard();
+    nextChallenge();
+    startTimer();
+
+    // Keyboard support for professional feel
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowLeft') handleInput(false);
+        if (e.key === 'ArrowRight') handleInput(true);
+    });
+</script>
+
+{% endblock %}

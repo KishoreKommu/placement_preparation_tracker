@@ -1,0 +1,274 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<style>
+    :root {
+        --primary: #6366f1;
+        --primary-light: #eef2ff;
+        --accent: #f43f5e;
+        --bg-main: #f8fafc;
+        --glass-bg: rgba(255, 255, 255, 0.8);
+        --text-dark: #0f172a;
+        --text-gray: #64748b;
+        --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    body {
+        background-color: var(--bg-main);
+        font-family: 'Plus+Jakarta+Sans', sans-serif;
+        color: var(--text-dark);
+    }
+
+    /* Header & Hero Section */
+    .roadmap-hero {
+        padding: 80px 20px 40px;
+        text-align: center;
+        background: radial-gradient(circle at top right, #eef2ff, transparent), 
+                    radial-gradient(circle at bottom left, #fff1f2, transparent);
+    }
+
+    .badge-top {
+        display: inline-block;
+        padding: 6px 16px;
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 100px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--primary);
+        margin-bottom: 20px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+    }
+
+    .hero-title {
+        font-size: clamp(2.5rem, 5vw, 3.5rem);
+        font-weight: 800;
+        letter-spacing: -2px;
+        margin-bottom: 15px;
+        background: linear-gradient(to right, #1e293b, #6366f1);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    /* Search & Filter Bar */
+    .controls-wrapper {
+        position: sticky;
+        top: 20px;
+        z-index: 100;
+        max-width: 800px;
+        margin: 0 auto 40px;
+        padding: 10px;
+        background: var(--glass-bg);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(255,255,255,0.3);
+        border-radius: 24px;
+        box-shadow: 0 20px 25px -5px rgba(0,0,0,0.05);
+    }
+
+    .search-group {
+        display: flex;
+        align-items: center;
+        padding: 5px 15px;
+    }
+
+    .search-group i {
+        color: var(--text-gray);
+        margin-right: 15px;
+    }
+
+    .search-input {
+        border: none;
+        background: transparent;
+        width: 100%;
+        padding: 12px 0;
+        font-size: 1.1rem;
+        font-weight: 500;
+        outline: none;
+    }
+
+    /* Stats & Info */
+    .stats-bar {
+        max-width: 1200px;
+        margin: 0 auto 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0 20px;
+        font-size: 0.9rem;
+        color: var(--text-gray);
+        font-weight: 600;
+    }
+
+    /* Grid & Cards */
+    .roadmap-grid {
+        max-width: 1200px;
+        margin: 0 auto 60px;
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 24px;
+        padding: 0 20px;
+    }
+
+    .roadmap-card {
+        background: white;
+        border-radius: 24px;
+        padding: 32px;
+        border: 1px solid #f1f5f9;
+        text-decoration: none;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        transition: var(--transition);
+        position: relative;
+    }
+
+    .roadmap-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 30px 50px rgba(0,0,0,0.08);
+        border-color: var(--primary);
+    }
+
+    .icon-box {
+        width: 56px;
+        height: 56px;
+        background: var(--primary-light);
+        color: var(--primary);
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        margin-bottom: 24px;
+        transition: var(--transition);
+    }
+
+    .roadmap-card:hover .icon-box {
+        background: var(--primary);
+        color: white;
+        transform: rotate(-5deg) scale(1.1);
+    }
+
+    .role-name {
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: var(--text-dark);
+        margin-bottom: 8px;
+    }
+
+    .role-desc {
+        font-size: 0.95rem;
+        color: var(--text-gray);
+        line-height: 1.6;
+        margin-bottom: 20px;
+    }
+
+    .card-footer {
+        margin-top: auto;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding-top: 20px;
+        border-top: 1px solid #f1f5f9;
+    }
+
+    .view-btn {
+        font-size: 0.9rem;
+        font-weight: 700;
+        color: var(--primary);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    /* Empty State */
+    #emptyState {
+        display: none;
+        text-align: center;
+        padding: 100px 20px;
+    }
+
+    #emptyState i {
+        font-size: 4rem;
+        color: #e2e8f0;
+        margin-bottom: 20px;
+    }
+
+</style>
+
+<div class="roadmap-hero">
+    <span class="badge-top"><i class="fas fa-sparkles"></i> Updated for 2026</span>
+    <h1 class="hero-title">Tech Career Hub</h1>
+    <p class="page-subtitle" style="max-width: 600px; margin: 0 auto;">
+        Access 50+ professionally curated roadmaps to guide your journey from beginner to expert.
+    </p>
+</div>
+
+<div class="controls-wrapper">
+    <div class="search-group">
+        <i class="fas fa-search"></i>
+        <input type="text" id="roadmapSearch" class="search-input" placeholder="Search for your dream role...">
+    </div>
+</div>
+
+<div class="stats-bar">
+    <span id="resultCount">Showing all skills</span>
+    <span><i class="fas fa-file-pdf"></i> PDF Resources</span>
+</div>
+
+<div class="roadmap-grid" id="roadmapGrid">
+    {% for skill in skills %}
+    <a href="{% url 'roadmap_detail' skill.slug %}" class="roadmap-card">
+        <div class="icon-box">
+            <i class="fas fa-code"></i>
+        </div>
+        <div class="card-content">
+            <h3 class="role-name">{{ skill.name }}</h3>
+            <p class="role-desc">Master the foundations, core tech stack, and advanced concepts for this role.</p>
+        </div>
+        <div class="card-footer">
+            <span class="view-btn">Full Roadmap <i class="fas fa-arrow-right"></i></span>
+            <span style="font-size: 0.75rem; background: #f1f5f9; padding: 4px 10px; border-radius: 6px; color: #475569;">4 Pages</span>
+        </div>
+    </a>
+    {% endfor %}
+</div>
+
+<div id="emptyState">
+    <i class="fas fa-search"></i>
+    <h3>No roadmaps found</h3>
+    <p>Try searching for a different keyword like "AI" or "Developer".</p>
+</div>
+
+<script>
+    const searchInput = document.getElementById('roadmapSearch');
+    const cards = document.querySelectorAll('.roadmap-card');
+    const resultCount = document.getElementById('resultCount');
+    const emptyState = document.getElementById('emptyState');
+
+    searchInput.addEventListener('input', function(e) {
+        const term = e.target.value.toLowerCase();
+        let visibleCount = 0;
+
+        cards.forEach(card => {
+            const name = card.querySelector('.role-name').textContent.toLowerCase();
+            if (name.includes(term)) {
+                card.style.display = 'flex';
+                visibleCount++;
+            } else {
+                card.style.display = 'none';
+            }
+        });
+
+        // Update Stats
+        resultCount.textContent = term === "" ? "Showing all skills" : `Found ${visibleCount} matches`;
+        
+        // Handle Empty State
+        emptyState.style.display = visibleCount === 0 ? 'block' : 'none';
+    });
+</script>
+
+{% endblock %}

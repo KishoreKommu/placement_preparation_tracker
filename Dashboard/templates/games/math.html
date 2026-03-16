@@ -1,0 +1,285 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+    :root {
+        --math-primary: #6366f1;
+        --math-success: #10b981;
+        --math-danger: #ef4444;
+    }
+
+    .math-wrapper {
+        max-width: 550px;
+        margin: 40px auto;
+        padding: 20px;
+        text-align: center;
+        animation: fadeIn 0.8s ease-out;
+    }
+
+    /* --- NAVIGATION --- */
+    .btn-back {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        color: var(--text-muted);
+        text-decoration: none;
+        font-weight: 700;
+        margin-bottom: 25px;
+        transition: 0.3s;
+    }
+    .btn-back:hover { color: var(--math-primary); transform: translateX(-5px); }
+
+    /* --- STATS BAR --- */
+    .math-stats {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 15px;
+        margin-bottom: 30px;
+    }
+
+    .stat-card {
+        background: var(--sidebar-bg);
+        padding: 15px;
+        border-radius: 20px;
+        border: 1px solid var(--border-soft);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+    }
+
+    .stat-label { font-size: 0.65rem; font-weight: 800; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 5px;}
+    .stat-value { font-size: 1.4rem; font-weight: 800; color: var(--text-dark); }
+
+    /* --- THE OPERATIONAL HUB --- */
+    .math-card {
+        background: white;
+        padding: 50px 30px;
+        border-radius: 32px;
+        box-shadow: 0 25px 50px -12px rgba(0,0,0,0.05);
+        border: 1px solid var(--border-soft);
+        position: relative;
+        overflow: hidden;
+    }
+
+    #question-display {
+        font-size: 4.5rem;
+        font-weight: 900;
+        letter-spacing: -3px;
+        color: var(--text-dark);
+        margin-bottom: 30px;
+    }
+
+    .answer-input {
+        width: 100%;
+        max-width: 200px;
+        font-size: 2.5rem;
+        font-weight: 800;
+        text-align: center;
+        border: 3px solid var(--border-soft);
+        border-radius: 20px;
+        padding: 10px;
+        color: var(--math-primary);
+        transition: 0.3s;
+        outline: none;
+    }
+
+    .answer-input:focus {
+        border-color: var(--math-primary);
+        box-shadow: 0 0 0 6px var(--primary-glow);
+    }
+
+    /* --- PROGRESS TIMER --- */
+    .timer-track {
+        width: 100%;
+        height: 8px;
+        background: var(--bg-main);
+        position: absolute;
+        bottom: 0;
+        left: 0;
+    }
+    #timer-bar {
+        height: 100%;
+        width: 100%;
+        background: var(--math-primary);
+        transition: width 0.1s linear;
+    }
+
+    /* --- OVERLAYS --- */
+    #game-over-screen {
+        position: absolute;
+        inset: 0;
+        background: var(--sidebar-bg);
+        z-index: 100;
+        display: none;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+    }
+
+    .btn-restart {
+        background: var(--math-primary);
+        color: white;
+        border: none;
+        padding: 15px 40px;
+        border-radius: 15px;
+        font-weight: 800;
+        margin-top: 20px;
+        transition: 0.3s;
+    }
+    .btn-restart:hover { transform: translateY(-3px); box-shadow: 0 10px 20px var(--primary-glow); }
+
+    /* Flash Effects */
+    .flash-green { animation: flashGreen 0.4s; }
+    .flash-red { animation: flashRed 0.4s; }
+    @keyframes flashGreen { 0%, 100% { background: white; } 50% { background: #d1fae5; } }
+    @keyframes flashRed { 0%, 100% { background: white; } 50% { background: #fee2e2; } }
+
+</style>
+
+<div class="math-wrapper">
+    <div class="text-start">
+        <a href="{% url 'games' %}" class="btn-back">
+            <i class="fas fa-chevron-left"></i> Back to Lab
+        </a>
+    </div>
+
+    <div class="math-stats">
+        <div class="stat-card">
+            <span class="stat-label">Score</span>
+            <span id="score-val" class="stat-value">0</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-label">Time</span>
+            <span id="timer-val" class="stat-value">30s</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-label">Streak</span>
+            <span id="streak-val" class="stat-value" style="color: var(--math-success)">0</span>
+        </div>
+    </div>
+
+    <div class="math-card" id="math-card">
+        <div id="question-display">-- + --</div>
+        
+        <input type="number" 
+               id="answer-field" 
+               class="answer-input" 
+               placeholder="?" 
+               autocomplete="off">
+
+        <div id="game-over-screen">
+            <h2 class="fw-black mb-1">Time's Up!</h2>
+            <p class="text-muted">Final Score: <b id="final-score">0</b></p>
+            <button class="btn-restart" onclick="startGame()">Try Again</button>
+        </div>
+
+        <div class="timer-track">
+            <div id="timer-bar"></div>
+        </div>
+    </div>
+
+    <p class="mt-4 text-muted small">
+        <i class="fas fa-keyboard me-2"></i> Press <b>Enter</b> to submit answers instantly.
+    </p>
+</div>
+
+<script>
+    let score = 0;
+    let streak = 0;
+    let timeLeft = 30;
+    let timerWidth = 100;
+    let a, b, correctAnswer;
+    let gameActive = false;
+    let interval;
+
+    const inputField = document.getElementById('answer-field');
+    const questionEl = document.getElementById('question-display');
+    const scoreEl = document.getElementById('score-val');
+    const streakEl = document.getElementById('streak-val');
+    const timerEl = document.getElementById('timer-val');
+    const timerBar = document.getElementById('timer-bar');
+    const card = document.getElementById('math-card');
+
+    function generateQuestion() {
+        // Increase difficulty based on score
+        let range = score > 10 ? 20 : 10;
+        a = Math.floor(Math.random() * range) + 1;
+        b = Math.floor(Math.random() * range) + 1;
+        correctAnswer = a + b;
+        questionEl.innerText = `${a} + ${b}`;
+        inputField.value = '';
+        inputField.focus();
+    }
+
+    function checkAnswer() {
+        if (!gameActive) return;
+
+        const userAns = parseInt(inputField.value);
+
+        if (userAns === correctAnswer) {
+            score++;
+            streak++;
+            // Reward: add 1 second for correct answer
+            timeLeft = Math.min(30, timeLeft + 1); 
+            
+            card.classList.add('flash-green');
+            setTimeout(() => card.classList.remove('flash-green'), 400);
+        } else {
+            streak = 0;
+            score = Math.max(0, score - 1);
+            
+            card.classList.add('flash-red');
+            setTimeout(() => card.classList.remove('flash-red'), 400);
+        }
+
+        updateUI();
+        generateQuestion();
+    }
+
+    function updateUI() {
+        scoreEl.innerText = score;
+        streakEl.innerText = streak;
+    }
+
+    function startGame() {
+        score = 0;
+        streak = 0;
+        timeLeft = 30;
+        gameActive = true;
+        document.getElementById('game-over-screen').style.display = 'none';
+        updateUI();
+        generateQuestion();
+        
+        if (interval) clearInterval(interval);
+        
+        interval = setInterval(() => {
+            timeLeft -= 0.1;
+            timerEl.innerText = Math.ceil(timeLeft) + "s";
+            
+            // Progress bar width
+            timerWidth = (timeLeft / 30) * 100;
+            timerBar.style.width = timerWidth + "%";
+
+            if (timeLeft <= 0) {
+                endGame();
+            }
+        }, 100);
+    }
+
+    function endGame() {
+        gameActive = false;
+        clearInterval(interval);
+        document.getElementById('game-over-screen').style.display = 'flex';
+        document.getElementById('final-score').innerText = score;
+    }
+
+    // Keyboard support
+    inputField.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') checkAnswer();
+    });
+
+    // Start on load
+    window.onload = startGame;
+
+</script>
+
+{% endblock %}

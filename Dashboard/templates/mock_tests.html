@@ -1,0 +1,334 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+
+<style>
+    :root {
+        --primary: #6366f1;
+        --primary-light: #eef2ff;
+        --accent: #f43f5e;
+        --bg-main: #f8fafc;
+        --surface: #ffffff;
+        --border-color: #e2e8f0;
+        --text-dark: #0f172a;
+        --text-gray: #64748b;
+        --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        --sidebar-width: 280px;
+    }
+
+    body {
+        background-color: var(--bg-main) !important;
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        color: var(--text-dark);
+        margin: 0;
+    }
+
+    .main-content-wrapper {
+        margin-left: var(--sidebar-width) !important;
+        width: calc(100% - var(--sidebar-width)) !important;
+        background-color: var(--bg-main) !important;
+        min-height: 100vh;
+        padding: 0 !important;
+    }
+
+    .arena-container {
+        padding: 3rem 4rem;
+        max-width: 1600px;
+        margin: 0 auto;
+    }
+
+    /* --- HERO HEADER (Same as Skills/Roadmaps) --- */
+    .arena-hero {
+        padding: 80px 20px 40px;
+        text-align: center;
+        background: radial-gradient(circle at top right, #eef2ff, transparent), 
+                    radial-gradient(circle at bottom left, #fff1f2, transparent);
+    }
+
+    .badge-top {
+        display: inline-block;
+        padding: 6px 16px;
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 100px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--primary);
+        margin-bottom: 20px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+    }
+
+    .hero-title {
+        font-size: clamp(2.5rem, 5vw, 3.5rem);
+        font-weight: 800;
+        letter-spacing: -2px;
+        margin-bottom: 15px;
+        background: linear-gradient(to right, #1e293b, #6366f1);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    /* --- STATS RIBBON --- */
+    .stats-ribbon {
+        display: flex;
+        gap: 1.5rem;
+        max-width: 1200px;
+        margin: 0 auto 50px;
+        padding: 0 20px;
+    }
+
+    .stat-pill {
+        background: white;
+        border: 1px solid var(--border-color);
+        padding: 1.25rem 1.5rem;
+        border-radius: 20px;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        flex: 1;
+        transition: var(--transition);
+        box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02);
+    }
+
+    .stat-pill:hover {
+        transform: translateY(-5px);
+        border-color: var(--primary);
+        box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.1);
+    }
+
+    .stat-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.2rem;
+    }
+
+    .stat-label {
+        font-size: 0.65rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        color: var(--text-gray);
+        letter-spacing: 1px;
+        display: block;
+    }
+
+    .stat-value {
+        font-weight: 800;
+        font-size: 1.25rem;
+        color: var(--text-dark);
+        letter-spacing: -0.5px;
+    }
+
+    /* --- SEARCH BAR --- */
+    .controls-wrapper {
+        position: sticky;
+        top: 20px;
+        z-index: 100;
+        max-width: 800px;
+        margin: 0 auto 60px;
+        padding: 10px;
+        background: rgba(255, 255, 255, 0.8);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(255,255,255,0.3);
+        border-radius: 24px;
+        box-shadow: 0 20px 25px -5px rgba(0,0,0,0.05);
+    }
+
+    .search-group {
+        display: flex;
+        align-items: center;
+        padding: 5px 15px;
+    }
+
+    .search-input {
+        border: none;
+        background: transparent;
+        width: 100%;
+        padding: 12px 0;
+        font-size: 1.1rem;
+        font-weight: 500;
+        outline: none;
+        color: var(--text-dark);
+    }
+
+    /* --- GRID & ARENA CARDS --- */
+    .arena-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+        gap: 2rem;
+    }
+
+    .arena-card-elite {
+        background: white;
+        border: 1px solid var(--border-color);
+        border-radius: 24px;
+        padding: 30px;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        transition: var(--transition);
+        position: relative;
+    }
+
+    .arena-card-elite:hover {
+        transform: translateY(-8px);
+        border-color: var(--primary);
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.1);
+    }
+
+    .tag-row {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 20px;
+    }
+
+    .arena-tag {
+        font-size: 0.65rem;
+        font-weight: 800;
+        padding: 4px 10px;
+        border-radius: 8px;
+        text-transform: uppercase;
+        background: var(--bg-main);
+        color: var(--text-gray);
+        border: 1px solid var(--border-color);
+    }
+
+    .arena-name {
+        font-size: 1.4rem;
+        font-weight: 800;
+        color: var(--text-dark);
+        margin-bottom: 12px;
+        letter-spacing: -0.5px;
+    }
+
+    .arena-desc {
+        font-size: 0.95rem;
+        color: var(--text-gray);
+        line-height: 1.6;
+        margin-bottom: 30px;
+        flex-grow: 1;
+    }
+
+    .btn-arena {
+        background: var(--primary);
+        color: white !important;
+        padding: 14px;
+        border-radius: 16px;
+        font-weight: 800;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        text-decoration: none !important;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        transition: 0.3s;
+        box-shadow: 0 4px 12px var(--primary-glow);
+    }
+
+    .btn-arena:hover {
+        background: #4f46e5;
+        transform: scale(1.02);
+    }
+</style>
+
+<div class="arena-hero">
+    <span class="badge-top"><i class="fas fa-swords"></i> Combat Simulation Active</span>
+    <h1 class="hero-title">Arena Vault</h1>
+    <p class="text-muted" style="max-width: 600px; margin: 0 auto; font-size: 1.1rem;">
+        Engage in proctored technical assessments and verify your engineering rank against global benchmarks.
+    </p>
+</div>
+
+<!-- <div class="stats-ribbon animate__animated animate__fadeInUp">
+    <div class="stat-pill">
+        <div class="stat-icon" style="background: #ffa116;"><i class="fab fa-leetcode"></i></div>
+        <div>
+            <span class="stat-label">LeetCode Sync</span>
+            <span class="stat-value">{{ lc_solved|default:"0" }} Solved</span>
+        </div>
+    </div>
+    <div class="stat-pill">
+        <div class="stat-icon" style="background: #2f8d46;"><i class="fas fa-terminal"></i></div>
+        <div>
+            <span class="stat-label">GFG Contributions</span>
+            <span class="stat-value">{{ gfg_score|default:"0" }} Points</span>
+        </div>
+    </div>
+    <div class="stat-pill" style="border-style: dashed; background: rgba(99, 102, 241, 0.03);">
+        <div class="stat-icon" style="background: var(--primary);"><i class="fas fa-shield-halved"></i></div>
+        <div>
+            <span class="stat-label">Security Protocol</span>
+            <span class="stat-value text-primary" style="font-size: 0.85rem;">ENCRYPTED_UPLINK</span>
+        </div>
+    </div>
+</div> -->
+
+<div class="controls-wrapper">
+    <div class="search-group">
+        <i class="fas fa-search" style="color: var(--primary);"></i>
+        <input type="text" id="arenaSearch" class="search-input" placeholder="Search assessments (e.g. Java, DBMS, Logic)...">
+    </div>
+</div>
+
+
+
+<div class="arena-container">
+    <div class="arena-grid" id="arenaEngine">
+        {% for test in tests %}
+        <div class="arena-item anim-card">
+            <div class="arena-card-elite">
+                <div class="tag-row">
+                    <span class="arena-tag"><i class="far fa-clock me-1"></i> 60 Mins</span>
+                    <span class="arena-tag" style="color: var(--primary); border-color: var(--primary-soft);">
+                        <i class="fas fa-list-check me-1"></i> {{ test.questions.count|default:"35" }} Questions
+                    </span>
+                </div>
+                
+                <h3 class="arena-name">{{ test.name }}</h3>
+                <p class="arena-desc">{{ test.description|default:"Verify your mastery in this domain through a time-bound, proctored assessment." }}</p>
+
+                <div class="pt-4 border-top">
+                    <a href="{% url 'take_mock_test' test.id %}" class="btn-arena">
+                        Enter Arena <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<script>
+    window.addEventListener('load', () => {
+        // High-performance GSAP entrance
+        gsap.from(".anim-card", { 
+            y: 30, 
+            opacity: 0, 
+            duration: 0.6, 
+            stagger: 0.08, 
+            ease: "expo.out" 
+        });
+        
+        // Intelligent Live Search
+        document.getElementById('arenaSearch').addEventListener('input', (e) => {
+            const term = e.target.value.toLowerCase();
+            document.querySelectorAll('.arena-item').forEach(item => {
+                const text = item.querySelector('h3').innerText.toLowerCase();
+                item.style.display = text.includes(term) ? "block" : "none";
+            });
+        });
+    });
+</script>
+
+{% endblock %}

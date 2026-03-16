@@ -1,0 +1,305 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+
+<style>
+    :root {
+        --accent: #6366f1;
+        --bg-pale: #f8fafc;
+        --success: #10b981;
+        --danger: #ef4444;
+    }
+
+    .arena-grid {
+        display: grid;
+        grid-template-columns: 1fr 320px;
+        gap: 2rem;
+        align-items: start
+    }
+
+    .question-card {
+        background: white;
+        border-radius: 1.5rem;
+        padding: 2.5rem;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+        margin-bottom: 2rem
+    }
+
+    .option-container { margin-bottom: 12px }
+    .option-input { display: none }
+
+    .option-label {
+        display: flex;
+        align-items: center;
+        padding: 1.25rem 1.5rem;
+        background: var(--bg-pale);
+        border: 2px solid #e2e8f0;
+        border-radius: 12px;
+        cursor: pointer;
+        transition: .2s;
+        font-weight: 600
+    }
+
+    .option-input:checked+.option-label {
+        border-color: var(--accent);
+        background: #eef2ff;
+        color: var(--accent)
+    }
+
+    .hud-card {
+        background: #0f172a;
+        color: white;
+        border-radius: 1.25rem;
+        padding: 1.5rem;
+        text-align: center
+    }
+
+    .nav-grid {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 8px;
+        margin-top: 1rem
+    }
+
+    .nav-dot {
+        width: 40px;
+        height: 40px;
+        border-radius: 8px;
+        background: #334155;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        text-decoration: none;
+        font-size: .8rem;
+        font-weight: 700
+    }
+
+    .nav-dot.active { background: var(--success) }
+
+    /* Result Overlay Fixes for long lists */
+    #resultOverlay {
+        position: fixed;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        background: rgba(15, 23, 42, 0.95);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        backdrop-filter: blur(8px);
+        overflow-y: auto; /* Enable scroll for long results */
+        padding: 2rem 0;
+    }
+
+    .result-card {
+        background: white;
+        width: 90%;
+        max-width: 700px;
+        border-radius: 2rem;
+        padding: 2.5rem;
+        text-align: center;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        margin: auto;
+    }
+
+    .score-circle {
+        width: 100px; height: 100px;
+        border-radius: 50%;
+        background: var(--accent);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.8rem;
+        font-weight: 900;
+        margin: 0 auto 1rem;
+    }
+
+    /* Detail List Styling */
+    .detail-list {
+        text-align: left;
+        max-height: 300px;
+        overflow-y: auto;
+        margin: 1.5rem 0;
+        padding: 1rem;
+        background: #f1f5f9;
+        border-radius: 1rem;
+    }
+
+    .detail-item {
+        padding: 10px;
+        border-bottom: 1px solid #e2e8f0;
+        font-size: 0.9rem;
+    }
+
+    .detail-item:last-child { border: none; }
+    .text-correct { color: var(--success); font-weight: bold; }
+    .text-wrong { color: var(--danger); font-weight: bold; }
+
+    @media(max-width:992px) { .arena-grid { grid-template-columns: 1fr } }
+</style>
+
+<div class="container-fluid animate__animated animate__fadeIn py-4">
+    <div class="d-flex justify-content-between align-items-end mb-4">
+        <div>
+            <h2 class="fw-black mb-0 text-primary">{{ test.name }}</h2>
+            <p class="text-muted mb-0">Professional Assessment Mode</p>
+        </div>
+        <button class="btn btn-outline-danger rounded-pill px-4 fw-bold" onclick="abortBattle()">ABORT TEST</button>
+    </div>
+
+    <div class="arena-grid">
+        <form id="battleForm">
+            {% csrf_token %}
+
+            {% for q in questions %}
+            <div class="question-card" id="q-block-{{ forloop.counter }}" 
+                 data-correct="{{ q.correct_option }}" 
+                 data-text="{{ q.question|striptags }}">
+                
+                <span class="badge bg-primary mb-3">Question {{ forloop.counter }}</span>
+                <h4 class="fw-bold mb-4">{{ q.question|safe }}</h4>
+
+                <div class="options-wrapper">
+                    <div class="option-container">
+                        <input type="radio" name="q{{ q.id }}" value="{{ q.option1 }}" class="option-input" id="o{{ q.id }}1" onchange="markDot({{ forloop.counter }})">
+                        <label class="option-label" for="o{{ q.id }}1">{{ q.option1|safe }}</label>
+                    </div>
+                    <div class="option-container">
+                        <input type="radio" name="q{{ q.id }}" value="{{ q.option2 }}" class="option-input" id="o{{ q.id }}2" onchange="markDot({{ forloop.counter }})">
+                        <label class="option-label" for="o{{ q.id }}2">{{ q.option2|safe }}</label>
+                    </div>
+                    <div class="option-container">
+                        <input type="radio" name="q{{ q.id }}" value="{{ q.option3 }}" class="option-input" id="o{{ q.id }}3" onchange="markDot({{ forloop.counter }})">
+                        <label class="option-label" for="o{{ q.id }}3">{{ q.option3|safe }}</label>
+                    </div>
+                    <div class="option-container">
+                        <input type="radio" name="q{{ q.id }}" value="{{ q.option4 }}" class="option-input" id="o{{ q.id }}4" onchange="markDot({{ forloop.counter }})">
+                        <label class="option-label" for="o{{ q.id }}4">{{ q.option4|safe }}</label>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+
+            <div class="question-card text-center bg-light">
+                <h5 class="fw-bold">Ready to submit?</h5>
+                <p class="text-muted">Answered <span id="answered-count">0</span> / {{ questions|length }} questions</p>
+                <button type="button" class="btn btn-primary btn-lg rounded-pill px-5 fw-black" id="submitButton" onclick="processResults()">
+                    SUBMIT ASSESSMENT
+                </button>
+            </div>
+        </form>
+
+        <div class="sticky-top" style="top:100px">
+            <div class="hud-card mb-4">
+                <small class="text-uppercase opacity-50 fw-bold">Time Remaining</small>
+                <h1 id="timer">45:00</h1>
+            </div>
+            <div class="question-card">
+                <h6 class="fw-bold mb-3 text-uppercase">Question Map</h6>
+                <div class="nav-grid">
+                    {% for q in questions %}
+                    <a href="#q-block-{{forloop.counter}}" class="nav-dot" id="dot-{{forloop.counter}}">
+                        {{forloop.counter}}
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="resultOverlay">
+    <div class="result-card animate__animated animate__zoomIn">
+        <div class="score-circle" id="resScoreCircle">0%</div>
+        <h2 class="fw-black mb-1" id="resTitle">Assessment Complete!</h2>
+        <p class="text-muted mb-2" id="resSummary"></p>
+        
+        <h6 class="text-uppercase fw-bold text-start mt-4 mb-2" style="font-size: 0.75rem; letter-spacing: 1px;">Review Answers:</h6>
+        <div class="detail-list" id="resDetails">
+            </div>
+        
+        <div class="d-grid gap-2">
+            <button class="btn btn-primary btn-lg rounded-pill fw-bold" onclick="window.location.reload()">RETRY TEST</button>
+            <button class="btn btn-light btn-lg rounded-pill fw-bold" onclick="window.location.href='/mock-tests/'">BACK TO DASHBOARD</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let timeLeft = 2700;
+    const timerDisplay = document.getElementById("timer");
+
+    const countdown = setInterval(() => {
+        timeLeft--;
+        let mins = Math.floor(timeLeft / 60);
+        let secs = timeLeft % 60;
+        timerDisplay.innerHTML = `${mins}:${secs < 10 ? "0" : ""}${secs}`;
+        if (timeLeft <= 300) timerDisplay.style.color = "#ef4444";
+        if (timeLeft <= 0) { clearInterval(countdown); processResults(); }
+    }, 1000);
+
+    function markDot(num) {
+        document.getElementById(`dot-${num}`).classList.add("active");
+        const checkedCount = document.querySelectorAll(".option-input:checked").length;
+        document.getElementById("answered-count").innerText = checkedCount;
+    }
+
+    function abortBattle() {
+        if (confirm("Aborting will result in 0% score. Continue?")) {
+            window.location.href = "/mock-tests/";
+        }
+    }
+
+    function processResults() {
+        if (timeLeft > 0) {
+            if (!confirm("Are you sure you want to submit?")) return;
+        }
+
+        clearInterval(countdown);
+        const questions = document.querySelectorAll(".question-card[id^='q-block-']");
+        let total = questions.length;
+        let correctCount = 0;
+        let detailHtml = "";
+
+        questions.forEach((q, index) => {
+            const selected = q.querySelector("input[type='radio']:checked");
+            const correctAnswer = q.getAttribute("data-correct").trim();
+            const questionText = q.getAttribute("data-text");
+            const userVal = selected ? selected.value.trim() : "Not Answered";
+            
+            const isCorrect = userVal === correctAnswer;
+            if (isCorrect) correctCount++;
+
+            detailHtml += `
+                <div class="detail-item">
+                    <div class="fw-bold">Q${index+1}: ${questionText.substring(0, 60)}...</div>
+                    <div class="${isCorrect ? 'text-correct' : 'text-wrong'}">
+                        Your Answer: ${userVal} ${isCorrect ? '✓' : '✗'}
+                    </div>
+                    ${!isCorrect ? `<div class="text-muted small">Correct Answer: ${correctAnswer}</div>` : ''}
+                </div>
+            `;
+        });
+
+        const percentage = Math.round((correctCount / total) * 100);
+
+        // Update UI
+        document.getElementById("resScoreCircle").innerText = `${percentage}%`;
+        document.getElementById("resSummary").innerText = `You got ${correctCount} out of ${total} correct.`;
+        document.getElementById("resDetails").innerHTML = detailHtml;
+        
+        // Color coding score
+        const circle = document.getElementById("resScoreCircle");
+        if(percentage >= 80) circle.style.background = "var(--success)";
+        else if (percentage < 40) circle.style.background = "var(--danger)";
+        else circle.style.background = "var(--accent)";
+
+        document.getElementById("resultOverlay").style.display = "flex";
+    }
+</script>
+
+{% endblock %}

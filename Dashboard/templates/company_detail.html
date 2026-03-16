@@ -1,0 +1,284 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<style>
+    :root {
+        --primary: #6366f1;
+        --primary-light: #eef2ff;
+        --success: #10b981;
+        --glass: rgba(255, 255, 255, 0.75);
+        --border: rgba(226, 232, 240, 0.8);
+    }
+
+    body {
+        background: #f8fafc;
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        color: #1e293b;
+    }
+
+    .company-hero-banner img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    /* Floating Navigation */
+    .back-nav {
+        display: inline-flex;
+        align-items: center;
+        padding: 8px 16px;
+        background: var(--glass);
+        backdrop-filter: blur(8px);
+        border: 1px solid var(--border);
+        border-radius: 100px;
+        color: var(--primary);
+        text-decoration: none;
+        font-weight: 700;
+        font-size: 0.9rem;
+        transition: all 0.3s ease;
+        margin-bottom: 2rem;
+    }
+
+    .back-nav:hover {
+        background: var(--primary);
+        color: white;
+        transform: translateX(-5px);
+    }
+
+    .glass-card {
+        background: var(--glass);
+        backdrop-filter: blur(12px);
+        border: 1px solid var(--border);
+        border-radius: 24px;
+        padding: 2.5rem;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .detail-icon {
+        width: 50px;
+        height: 50px;
+        background: var(--primary-light);
+        color: var(--primary);
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+        margin-bottom: 1.25rem;
+    }
+
+    /* Journey Pipeline */
+    .journey-line {
+        position: relative;
+        padding-left: 45px;
+    }
+
+    .journey-line::before {
+        content: '';
+        position: absolute;
+        left: 19px;
+        top: 0;
+        height: 100%;
+        width: 2px;
+        background: #e2e8f0;
+    }
+
+    .step-item {
+        position: relative;
+        margin-bottom: 2rem;
+    }
+
+    .step-item::after {
+        content: '\f3c5';
+        font-family: 'Font Awesome 6 Free';
+        font-weight: 900;
+        position: absolute;
+        left: -35px;
+        top: 0;
+        width: 22px;
+        height: 22px;
+        background: white;
+        border: 2px solid var(--primary);
+        color: var(--primary);
+        border-radius: 50% 50% 50% 0;
+        transform: rotate(-45deg);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.6rem;
+        z-index: 2;
+    }
+
+    .compatibility-meter {
+        width: 140px;
+        height: 140px;
+        border-radius: 50%;
+        background: conic-gradient(var(--primary) 82%, #e2e8f0 0);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto;
+        position: relative;
+    }
+
+    .compatibility-meter::after {
+        content: "82%";
+        position: absolute;
+        width: 110px;
+        height: 110px;
+        background: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 800;
+        font-size: 1.5rem;
+        color: var(--primary);
+    }
+
+    .metric-badge {
+        background: white;
+        padding: 12px;
+        border-radius: 16px;
+        border: 1px solid var(--border);
+        text-align: center;
+    }
+</style>
+
+<div class="container py-5 animate__animated animate__fadeIn">
+    
+    <a href="{% url 'target_companies' %}" class="back-nav">
+        <i class="fas fa-arrow-left me-2"></i> Explore All Companies
+    </a>
+
+    
+
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-end mb-5 position-relative" style="z-index: 5; padding: 0 20px;">
+        <div class="d-flex align-items-center gap-4">
+            <div class="bg-white p-3 rounded-4 shadow-lg border" style="width: 100px; height: 100px; display: flex; align-items: center; justify-content: center;">
+                <h1 class="mb-0 fw-800 text-primary">{{ company.name|slice:":1" }}</h1>
+            </div>
+            <div class="bg-white p-2 rounded-3 px-3 shadow-sm">
+                <h1 class="fw-800 mb-1" style="letter-spacing: -1.5px;">{{ company.name }}</h1>
+                <div class="d-flex gap-2">
+                    <span class="badge bg-soft-success text-success px-3 rounded-pill border border-success border-opacity-25">Tier 1 Elite</span>
+                    <span class="badge bg-soft-primary text-primary px-3 rounded-pill border border-primary border-opacity-25">Product Based</span>
+                </div>
+            </div>
+        </div>
+        <div class="mt-4 mt-md-0">
+            <button class="btn btn-primary btn-lg rounded-pill px-5 fw-bold shadow-lg">
+                <i class="fas fa-paper-plane me-2"></i> Apply to Portal
+            </button>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="glass-card mb-4 shadow-sm">
+                <h5 class="fw-800 mb-4 d-flex align-items-center">
+                    <i class="fas fa-fingerprint me-3 text-primary"></i> Company Overview
+                </h5>
+                <p class="text-muted" style="line-height: 1.8; font-size: 1.05rem;">
+                    {{ company.description }}
+                </p>
+                
+                <div class="row g-3 mt-4">
+                    <div class="col-md-4">
+                        <div class="metric-badge">
+                            <small class="text-muted d-block text-uppercase fw-bold" style="font-size: 0.65rem;">Open Roles</small>
+                            <span class="fw-800">{{ company.positions }}</span>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="metric-badge">
+                            <small class="text-muted d-block text-uppercase fw-bold" style="font-size: 0.65rem;">Environment</small>
+                            <span class="fw-800">Hybrid / Remote</span>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="metric-badge border-success">
+                            <small class="text-muted d-block text-uppercase fw-bold" style="font-size: 0.65rem;">Estimated CTC</small>
+                            <span class="fw-800 text-success">14 - 22 LPA</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-4 mb-4">
+                <div class="col-md-6">
+                    <div class="glass-card h-100 shadow-sm">
+                        <div class="detail-icon"><i class="fas fa-microchip"></i></div>
+                        <h6 class="fw-800">Technical Stack</h6>
+                        <p class="small text-muted mb-0">{{ company.skillset }}</p>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="glass-card h-100 shadow-sm">
+                        <div class="detail-icon"><i class="fas fa-tasks"></i></div>
+                        <h6 class="fw-800">Core Responsibilities</h6>
+                        <p class="small text-muted mb-0">{{ company.tasks }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="glass-card">
+                <h5 class="fw-800 mb-5 d-flex align-items-center">
+                    <i class="fas fa-route me-3 text-primary"></i> Recruitment Pipeline
+                </h5>
+                <div class="journey-line">
+                    <div class="step-item">
+                        <div class="step-content">
+                            <span class="fw-800 small d-block text-primary">Phase 01: Resume Screening</span>
+                            <p class="small text-muted mb-0">Keyword-based AI filtering for tech relevance.</p>
+                        </div>
+                    </div>
+                    <div class="step-item">
+                        <div class="step-content">
+                            <span class="fw-800 small d-block">Phase 02: Coding Assessment</span>
+                            <p class="small text-muted mb-0">3 DSA problems + CS Core Fundamentals.</p>
+                        </div>
+                    </div>
+                    <div class="step-item">
+                        <div class="step-content">
+                            <span class="fw-800 small d-block">Phase 03: Technical Interview</span>
+                            <p class="small text-muted mb-0">System Design and Problem Solving deep-dive.</p>
+                        </div>
+                    </div>
+                    <div class="step-item mb-0">
+                        <div class="step-content">
+                            <span class="fw-800 small d-block text-success">Phase 04: HR & Values</span>
+                            <p class="small text-muted mb-0">Culture fitment and final discussions.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="glass-card text-center mb-4 sticky-top border-primary" style="top: 2rem;">
+                <h6 class="fw-800 mb-4">Your Prep-Match Score</h6>
+                <div class="compatibility-meter mb-4"></div>
+                <p class="small text-muted mb-4">You match 82% of the requirements. Practice <b>System Design</b> to bridge the gap.</p>
+                
+                <div class="p-4 bg-white rounded-4 border mb-3 text-start">
+                    <h6 class="fw-800 small mb-3">Target Prep Links</h6>
+                    <a href="https://www.geeksforgeeks.org/" target="_blank" class="d-flex align-items-center text-decoration-none mb-3 p-2 border rounded-3 hover-shadow">
+                        <div class="bg-primary text-white p-2 rounded-2 me-3"><i class="fas fa-vial"></i></div>
+                        <span class="small fw-700 text-dark">Mock Test Suite</span>
+                    </a>
+                    <a href="https://leetcode.com/" target="_blank" class="d-flex align-items-center text-decoration-none p-2 border rounded-3 hover-shadow">
+                        <div class="bg-success text-white p-2 rounded-2 me-3"><i class="fas fa-code"></i></div>
+                        <span class="small fw-700 text-dark">Solved Tagged Issues</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

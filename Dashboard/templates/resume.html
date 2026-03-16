@@ -1,0 +1,373 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+
+<style>
+    :root {
+        --primary: #6366f1;
+        --success: #10b981;
+        --warning: #f59e0b;
+        --danger: #ef4444;
+        --primary-light: #eef2ff;
+        --bg-main: #f8fafc;
+        --surface: #ffffff;
+        --border-color: #e2e8f0;
+        --text-dark: #0f172a;
+        --text-gray: #64748b;
+        --sidebar-width: 280px;
+    }
+
+    body {
+        background-color: var(--bg-main) !important;
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        color: var(--text-dark);
+        margin: 0;
+    }
+
+    .main-content-wrapper {
+        margin-left: var(--sidebar-width) !important;
+        width: calc(100% - var(--sidebar-width)) !important;
+        background-color: var(--bg-main) !important;
+        min-height: 100vh;
+        padding: 0 !important;
+    }
+
+    .resume-hero {
+        padding: 60px 20px 30px;
+        text-align: center;
+        background: radial-gradient(circle at top right, #eef2ff, transparent), 
+                    radial-gradient(circle at bottom left, #fff1f2, transparent);
+    }
+
+    .badge-top {
+        display: inline-block;
+        padding: 6px 16px;
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 100px;
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: var(--primary);
+        margin-bottom: 20px;
+    }
+
+    .hero-title {
+        font-size: clamp(2.5rem, 5vw, 3.5rem);
+        font-weight: 800;
+        letter-spacing: -2px;
+        background: linear-gradient(to right, #1e293b, #6366f1);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .resume-container {
+        padding: 0 3rem 4rem;
+        max-width: 1600px;
+        margin: 0 auto;
+    }
+
+    .glass-card {
+        background: var(--surface);
+        border: 1px solid var(--border-color);
+        border-radius: 24px;
+        padding: 2.5rem;
+        box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02);
+        height: 100%;
+    }
+
+    .info-card {
+        border: none;
+        background: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(10px);
+        border-radius: 20px;
+        padding: 1.5rem;
+        border: 1px solid var(--border-color);
+    }
+
+    .dropzone-wrapper {
+        border: 2px dashed var(--border-color);
+        background: var(--bg-main);
+        border-radius: 20px;
+        padding: 3rem 2rem;
+        text-align: center;
+        transition: 0.3s;
+        cursor: pointer;
+    }
+
+    .dropzone-wrapper:hover {
+        border-color: var(--primary);
+        background: rgba(99, 102, 241, 0.03);
+    }
+
+    .score-gauge {
+        width: 140px; height: 140px;
+        border-radius: 50%;
+        background: conic-gradient(var(--primary) calc(var(--score) * 3.6deg), #f1f5f9 0deg);
+        display: flex; align-items: center; justify-content: center;
+        margin: 0 auto; position: relative;
+    }
+    .score-gauge::after {
+        content: ""; position: absolute; width: 110px; height: 110px;
+        background: var(--surface); border-radius: 50%;
+    }
+    .score-inner { position: relative; z-index: 1; font-size: 2rem; font-weight: 800; color: var(--primary); }
+
+    .faq-btn {
+        width: 100%; text-align: left; padding: 1rem;
+        background: white; border: 1px solid var(--border-color);
+        border-radius: 12px; font-weight: 700; margin-bottom: 10px;
+        display: flex; justify-content: space-between; align-items: center;
+    }
+
+    .btn-download-analysis {
+        background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+        color: white; border: none; transition: 0.3s;
+    }
+    .btn-download-analysis:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(0,0,0,0.1); color: white; }
+
+    .skill-tag {
+        display: inline-block; padding: 4px 12px; border-radius: 100px;
+        background: var(--primary-light); color: var(--primary);
+        font-weight: 600; font-size: 0.75rem; margin: 2px;
+    }
+</style>
+
+<div class="resume-hero">
+    <span class="badge-top"><i class="fas fa-shield-halved"></i> Tier-1 Optimization Protocol Active</span>
+    <h1 class="hero-title">Nexus AI Optimizer</h1>
+    <p class="text-muted" style="max-width: 650px; margin: 0 auto; font-weight: 500;">
+        Structural integrity and keyword density analysis to bypass algorithmic filters for engineering roles.
+    </p>
+</div>
+
+<div class="resume-container">
+    
+    {% if not score %}
+    <div class="row g-4 mb-5 anim-panel">
+        <div class="col-md-4">
+            <div class="info-card h-100">
+                <div class="icon-box mb-3 text-primary"><i class="fas fa-id-card fa-2x"></i></div>
+                <h5 class="fw-800">Professional Identity</h5>
+                <p class="text-muted small">Your resume is your professional passport. It summarizes your skills to prove you are the best fit for a role.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="info-card h-100">
+                <div class="icon-box mb-3 text-success"><i class="fas fa-bullseye fa-2x"></i></div>
+                <h5 class="fw-800">Recruiter Visibility</h5>
+                <p class="text-muted small">A strong resume secures your spot in the interview room. It must grab attention in under 6 seconds.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="info-card h-100">
+                <div class="icon-box mb-3 text-warning"><i class="fas fa-robot fa-2x"></i></div>
+                <h5 class="fw-800">ATS Algorithms</h5>
+                <p class="text-muted small">Applicant Tracking Systems filter resumes based on keywords. We help you stay visible to these robots.</p>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="row g-4">
+            <div class="col-lg-8">
+                <div class="glass-card anim-panel">
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <label class="fw-800 small text-uppercase mb-2 d-block text-muted">1. Source File</label>
+                            <div class="dropzone-wrapper" id="dropzone" onclick="document.getElementById('id_resume_file').click()">
+                                <i class="fas fa-cloud-upload-alt mb-3 text-primary" style="font-size: 2.5rem;"></i>
+                                <h6 class="fw-700">Upload CV</h6>
+                                <p class="text-muted x-small">PDF or DOCX</p>
+                                <input type="file" name="resume_file" id="id_resume_file" hidden>
+                                <div id="file-name" class="badge bg-primary d-none mt-2"></div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="fw-800 small text-uppercase mb-2 d-block text-muted">2. Job Target</label>
+                            <textarea name="job_description" class="form-control" rows="6" placeholder="Paste target job description for keyword gap analysis..." style="border-radius: 15px; border: 2px dashed var(--border-color); background: var(--bg-main); font-size: 0.85rem;"></textarea>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100 rounded-pill py-3 mt-4 fw-800 shadow-lg">
+                        <i class="fas fa-microchip me-2"></i> INITIATE FULL SYSTEM SCAN
+                    </button>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="glass-card anim-panel" style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); color: white;">
+                    <h6 class="fw-800 text-uppercase mb-4" style="color: var(--primary); letter-spacing: 1px;">Strategic Intelligence</h6>
+                    <div class="accordion accordion-flush" id="resumeGuide">
+                        <div class="bg-transparent border-0 mb-3">
+                            <button class="btn btn-link text-white text-decoration-none p-0 fw-700 small" data-bs-toggle="collapse" data-bs-target="#guide1">
+                                <i class="fas fa-chevron-right me-2 text-primary"></i> Perfect Resume Prep
+                            </button>
+                            <div id="guide1" class="collapse show text-white-50 x-small mt-2" data-bs-parent="#resumeGuide">
+                                Use a single-column layout. Standard fonts like Roboto or Arial are ATS-safe.
+                            </div>
+                        </div>
+                        <div class="bg-transparent border-0 mb-3">
+                            <button class="btn btn-link text-white text-decoration-none p-0 fw-700 small" data-bs-toggle="collapse" data-bs-target="#guide2">
+                                <i class="fas fa-chevron-right me-2 text-primary"></i> Professional Summary
+                            </button>
+                            <div id="guide2" class="collapse text-white-50 x-small mt-2" data-bs-parent="#resumeGuide">
+                                3 lines max: Role + Top Achievement + Core Tech Stack.
+                            </div>
+                        </div>
+                        <div class="bg-transparent border-0">
+                            <button class="btn btn-link text-white text-decoration-none p-0 fw-700 small" data-bs-toggle="collapse" data-bs-target="#guide3">
+                                <i class="fas fa-chevron-right me-2 text-primary"></i> Listing Experience
+                            </button>
+                            <div id="guide3" class="collapse text-white-50 x-small mt-2" data-bs-parent="#resumeGuide">
+                                Use "Action-Context-Result" (e.g., "Optimized API, cutting latency by 30%").
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+
+    {% if score %}
+    <div class="row g-4 mt-5 animate__animated animate__fadeIn">
+        <div class="col-lg-4">
+            <div class="glass-card text-center">
+                <h6 class="fw-800 text-uppercase text-muted small mb-4">Strength Index</h6>
+                <div class="score-gauge" style="--score: {{ score }}">
+                    <div class="score-inner counter-val" data-target="{{ score }}">0</div>
+                </div>
+                <div class="mt-4">
+                    <canvas id="strengthChart" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-8">
+            <div class="glass-card">
+                <div class="row">
+                    <div class="col-md-6 border-end">
+                        <h6 class="fw-800 text-primary small text-uppercase mb-3"><i class="fas fa-key me-2"></i> Keyword Analytics</h6>
+                        <div class="mb-3">
+                            <span class="skill-tag">Python</span> <span class="skill-tag">Django</span>
+                        </div>
+                        <p class="x-small text-danger fw-700"><i class="fas fa-circle-minus"></i> Missing: SQL, AWS</p>
+                    </div>
+                    <div class="col-md-6 ps-md-4">
+                        <h6 class="fw-800 text-primary small text-uppercase mb-3"><i class="fas fa-wand-magic-sparkles me-2"></i> AI Improvement</h6>
+                        <div style="background: #fffbeb; padding: 15px; border-radius: 12px; border-left: 4px solid var(--warning);">
+                            <p class="x-small text-muted mb-1 text-uppercase">Recommendation:</p>
+                            <p class="small fw-700 text-dark mb-0">"Architected a scalable Django backend, improving student placement tracking efficiency by 25%."</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <hr class="my-4 opacity-10">
+
+                <div class="row g-4 align-items-center">
+                    <div class="col-md-8">
+                        <h6 class="fw-800 text-uppercase text-muted small mb-1">Detailed Analysis</h6>
+                        <p class="small text-muted mb-0">Download the full log including grammar, formatting, and structural feedback.</p>
+                    </div>
+                    <div class="col-md-4">
+                        <form method="POST" action="{% url 'download_analysis_pdf' %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="score_data" value="{{ score }}">
+                            <button type="submit" class="btn btn-download-analysis w-100 rounded-pill py-3 fw-800">
+                                <i class="fas fa-file-pdf me-2"></i> DOWNLOAD PDF
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if not score %}
+    <div class="row mt-5 anim-panel">
+        <div class="col-12">
+            <h4 class="fw-800 mb-4"><i class="fas fa-circle-info me-2 text-primary"></i> Pre-Upload Intelligence</h4>
+            <div class="row">
+                <div class="col-md-6">
+                    <button class="faq-btn" data-bs-toggle="collapse" data-bs-target="#faq1">What is an ATS? <i class="fas fa-plus small"></i></button>
+                    <div id="faq1" class="collapse px-3 pb-3 small text-muted">A robot used by HR to filter resumes based on keyword matches and layout structure.</div>
+                    
+                    <button class="faq-btn" data-bs-toggle="collapse" data-bs-target="#faq2">Why use Job Descriptions? <i class="fas fa-plus small"></i></button>
+                    <div id="faq2" class="collapse px-3 pb-3 small text-muted">Our AI compares your skills against the JD to show you exactly what words you are missing.</div>
+                </div>
+                <div class="col-md-6">
+                    <button class="faq-btn" data-bs-toggle="collapse" data-bs-target="#faq3">Best File Format? <i class="fas fa-plus small"></i></button>
+                    <div id="faq3" class="collapse px-3 pb-3 small text-muted">PDF is best for retaining visual layout; DOCX is best for maximum ATS compatibility.</div>
+
+                    <button class="faq-btn" data-bs-toggle="collapse" data-bs-target="#faq4">Education Section? <i class="fas fa-plus small"></i></button>
+                    <div id="faq4" class="collapse px-3 pb-3 small text-muted">For students, keep this at the top. For pros, move it below your experience.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+</div>
+
+<script>
+    // File Input Visuals
+    const fileInput = document.getElementById('id_resume_file');
+    const fileNameBadge = document.getElementById('file-name');
+
+    if(fileInput) {
+        fileInput.addEventListener('change', (e) => {
+            if (fileInput.files.length > 0) {
+                fileNameBadge.innerText = `READY: ${fileInput.files[0].name}`;
+                fileNameBadge.classList.remove('d-none');
+                gsap.from(fileNameBadge, { scale: 0.8, opacity: 0, duration: 0.3 });
+            }
+        });
+    }
+
+    // Animation and Chart Logic
+    window.addEventListener('load', () => {
+        gsap.from(".anim-panel", {
+            y: 30, opacity: 0, duration: 0.6, stagger: 0.1, ease: "expo.out"
+        });
+
+        if (document.querySelector('.counter-val')) {
+            document.querySelectorAll('.counter-val').forEach(c => {
+                const target = +c.dataset.target;
+                const obj = { val: 0 };
+                gsap.to(obj, {
+                    val: target, duration: 2, ease: "power3.out",
+                    onUpdate: () => { c.innerText = Math.ceil(obj.val) + "%"; }
+                });
+            });
+
+            const ctx = document.getElementById('strengthChart')?.getContext('2d');
+            if (ctx) {
+                new Chart(ctx, {
+                    type: 'radar',
+                    data: {
+                        labels: ['Skills', 'Experience', 'Education', 'ATS', 'Format'],
+                        datasets: [{
+                            data: [85, 60, 90, 75, 80],
+                            backgroundColor: 'rgba(99, 102, 241, 0.2)',
+                            borderColor: 'rgb(99, 102, 241)',
+                            pointBackgroundColor: 'rgb(99, 102, 241)',
+                        }]
+                    },
+                    options: {
+                        scales: { r: { suggestMin: 0, suggestMax: 100, ticks: { display: false } } },
+                        plugins: { legend: { display: false } }
+                    }
+                });
+            }
+        }
+    });
+</script>
+
+{% endblock %}

@@ -1,0 +1,398 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+
+<style>
+    :root {
+        --primary: #6366f1;
+        --primary-light: #eef2ff;
+        --accent: #f43f5e;
+        --bg-main: #f8fafc;
+        --surface: #ffffff;
+        --border-color: #e2e8f0;
+        --text-dark: #0f172a;
+        --text-gray: #64748b;
+        --sidebar-width: 280px;
+    }
+
+    body {
+        background-color: var(--bg-main) !important;
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        color: var(--text-dark);
+        margin: 0;
+    }
+
+    .main-content-wrapper {
+        margin-left: var(--sidebar-width) !important;
+        width: calc(100% - var(--sidebar-width)) !important;
+        background-color: var(--bg-main) !important;
+        min-height: 100vh;
+        padding: 0 !important;
+        display: flex;
+        flex-direction: column;
+    }
+
+    /* --- HERO HEADER --- */
+    .chat-hero {
+        padding: 60px 20px 30px;
+        text-align: center;
+        background: radial-gradient(circle at top right, #eef2ff, transparent), 
+                    radial-gradient(circle at bottom left, #fff1f2, transparent);
+    }
+
+    .badge-top {
+        display: inline-block;
+        padding: 6px 16px;
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 100px;
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: var(--primary);
+        margin-bottom: 15px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+    }
+
+    .hero-title {
+        font-size: clamp(2rem, 4vw, 3rem);
+        font-weight: 800;
+        letter-spacing: -1.5px;
+        background: linear-gradient(to right, #1e293b, #6366f1);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: 10px;
+    }
+
+    /* --- CHAT INTERFACE --- */
+    .chat-container {
+        flex: 1;
+        max-width: 1000px;
+        width: 95%;
+        margin: 0 auto 30px;
+        background: var(--surface);
+        border: 1px solid var(--border-color);
+        border-radius: 28px;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        box-shadow: 0 20px 50px -12px rgba(0, 0, 0, 0.05);
+    }
+
+    .chat-toolbar {
+        padding: 15px 25px;
+        background: white;
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    #chat-box {
+        flex: 1;
+        overflow-y: auto;
+        padding: 30px;
+        background: rgba(248, 250, 252, 0.4);
+        scroll-behavior: smooth;
+    }
+
+    #chat-box::-webkit-scrollbar { width: 5px; }
+    #chat-box::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+
+    /* Bubbles */
+    .bubble-bot {
+        background: white;
+        border: 1px solid var(--border-color);
+        border-radius: 20px 20px 20px 4px;
+        padding: 18px 22px;
+        box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02);
+        max-width: 85%;
+        margin-bottom: 20px;
+    }
+
+    .bubble-user {
+        background: var(--primary);
+        color: white;
+        border-radius: 20px 20px 4px 20px;
+        padding: 16px 20px;
+        box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.2);
+        max-width: 80%;
+        margin-left: auto;
+        margin-bottom: 20px;
+    }
+
+    /* Code Blocks Styling */
+    .code-container {
+        background: #0f172a;
+        border-radius: 12px;
+        margin: 15px 0;
+        border: 1px solid #334155;
+        font-family: 'Fira Code', monospace;
+    }
+    .code-header {
+        background: #1e293b;
+        padding: 8px 16px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid #334155;
+        border-radius: 12px 12px 0 0;
+    }
+    .code-content { padding: 16px; overflow-x: auto; color: #e2e8f0; font-size: 0.85rem; line-height: 1.6; white-space: pre; }
+
+    /* Input Area */
+    .input-panel {
+        padding: 20px 30px;
+        background: white;
+        border-top: 1px solid var(--border-color);
+    }
+    .input-wrapper {
+        position: relative;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    .pro-input {
+        width: 100%;
+        padding: 16px 110px 16px 25px;
+        border-radius: 18px;
+        border: 1px solid var(--border-color);
+        background: var(--bg-main);
+        font-weight: 500;
+        transition: 0.3s;
+        font-size: 1rem;
+    }
+    .pro-input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 4px var(--primary-light); background: white; }
+
+    .btn-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: 0.2s;
+        border: none;
+        cursor: pointer;
+    }
+    .btn-send { background: var(--primary); color: white; }
+    .btn-mic { background: #f1f5f9; color: var(--text-gray); }
+    .btn-mic.listening { background: var(--accent); color: white; animation: pulse 1.5s infinite; }
+
+    @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+
+    .typing-dot {
+        width: 6px; height: 6px; background: var(--primary); border-radius: 50%;
+        display: inline-block; animation: bounce 1.4s infinite ease-in-out both; margin: 0 2px;
+    }
+    @keyframes bounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1.0); } }
+
+    /* Bot Heading Style Fix */
+    .bot-header-style {
+        font-weight: 800;
+        color: var(--text-dark);
+        margin: 20px 0 10px 0;
+        padding-bottom: 5px;
+        border-bottom: 2px solid var(--primary-light);
+        display: block;
+    }
+</style>
+
+<div class="chat-hero">
+    <span class="badge-top"><i class="fas fa-robot"></i> Neural Assistant Active</span>
+    <h1 class="hero-title">AI Consultant</h1>
+    <p class="text-muted" style="max-width: 500px; margin: 0 auto; font-size: 1rem;">
+        Real-time technical guidance for DSA, System Design, and Placement Strategy.
+    </p>
+</div>
+
+<div class="chat-container">
+    <div class="chat-toolbar">
+        <div class="d-flex align-items-center gap-2">
+            <div class="bg-success rounded-circle" style="width: 8px; height: 8px;"></div>
+            <span class="small fw-800 text-uppercase tracking-widest opacity-50" style="font-size: 0.6rem;">Session ID: 0x4F2A</span>
+        </div>
+        <button onclick="clearChat()" class="btn btn-sm btn-outline-danger rounded-pill px-3 fw-bold" style="font-size: 0.65rem;">
+            <i class="fas fa-trash-can me-1"></i> RESET LOGS
+        </button>
+    </div>
+
+    <div id="chat-box"></div>
+
+    <div class="input-panel">
+        <div class="input-wrapper">
+            <input type="text" id="user-input" class="pro-input" 
+                   placeholder="Ask about pointers, recursion, or company patterns..."
+                   onkeydown="if(event.key==='Enter'){sendMessage()}">
+            
+            <div style="position: absolute; right: 10px; display: flex; gap: 8px;">
+                <button id="mic-btn" onclick="toggleVoice()" class="btn-icon btn-mic" title="Voice Input">
+                    <i class="fas fa-microphone"></i>
+                </button>
+                <button onclick="sendMessage()" class="btn-icon btn-send">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+        </div>
+        <div class="d-flex justify-content-center gap-3 mt-3 opacity-50">
+            <span class="small fw-700 text-uppercase tracking-tighter" style="font-size: 0.55rem;">Engine: Gemini 3 Flash</span>
+            <span class="small fw-700 text-uppercase tracking-tighter" style="font-size: 0.55rem;">Latency: 24ms</span>
+        </div>
+    </div>
+</div>
+
+<script>
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+const recognition = SpeechRecognition ? new SpeechRecognition() : null;
+let isListening = false;
+
+if (recognition) {
+    recognition.continuous = false;
+    recognition.lang = 'en-US';
+    recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        document.getElementById('user-input').value = transcript;
+        toggleVoice();
+        sendMessage();
+    };
+}
+
+function toggleVoice() {
+    if(!recognition) return;
+    const btn = document.getElementById('mic-btn');
+    isListening = !isListening;
+    if(isListening) {
+        recognition.start();
+        btn.classList.add('listening');
+    } else {
+        recognition.stop();
+        btn.classList.remove('listening');
+    }
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+    showBotGreeting();
+});
+
+function showBotGreeting() {
+    const chatBox = document.getElementById("chat-box");
+    const greeting = "Consultant Node Established. I'm ready to process technical queries. I can assist with competitive programming optimization, system design reviews, or resume keyword density analysis. How can I assist your deployment today?";
+    
+    chatBox.innerHTML += `
+        <div class="flex justify-start items-end mb-4 animate__animated animate__fadeInLeft">
+            <div class="bubble-bot">
+                <p class="text-[10px] text-primary mb-2 font-extrabold uppercase tracking-widest">Consultant Node</p>
+                <div class="leading-relaxed text-sm font-medium">${greeting}</div>
+            </div>
+        </div>
+    `;
+}
+
+function clearChat() {
+    document.getElementById("chat-box").innerHTML = "";
+    showBotGreeting();
+}
+
+function formatText(text) {
+    // 1. Code Blocks
+    text = text.replace(/```(\w+)?\n([\s\S]+?)```/g, function(match, lang, code) {
+        const id = 'code-' + Math.random().toString(36).substr(2, 9);
+        return `
+            <div class="code-container">
+                <div class="code-header">
+                    <span class="text-[10px] font-bold text-slate-400 uppercase">${lang || 'script'}</span>
+                    <button class="text-slate-400 hover:text-white text-[10px] font-bold border-0 bg-transparent cursor-pointer" onclick="copyCode('${id}')">
+                        <i class="fas fa-copy me-1"></i> COPY
+                    </button>
+                </div>
+                <div class="code-content" id="${id}">${code.trim()}</div>
+            </div>`;
+    });
+
+    // 2. Headings (FIXED: Catches ## and ###)
+    text = text.replace(/^### (.*$)/gm, '<span class="bot-header-style" style="font-size: 1.1rem;">$1</span>');
+    text = text.replace(/^## (.*$)/gm, '<span class="bot-header-style" style="font-size: 1.25rem; border-left: 4px solid var(--primary); padding-left: 10px;">$1</span>');
+
+    // 3. Bold
+    text = text.replace(/\*\*(.*?)\*\*/g, '<strong class="fw-bold text-dark">$1</strong>');
+
+    // 4. Inline Code
+    text = text.replace(/`([^`]+)`/g, '<code class="bg-indigo-50 px-1.5 py-0.5 rounded text-indigo-600 font-mono text-xs border border-indigo-100">$1</code>');
+
+    // 5. Lists
+    text = text.replace(/^\s*[\*|-]\s+(.*$)/gm, '<div class="d-flex gap-2 mb-1"><span class="text-primary">•</span><span>$1</span></div>');
+
+    // 6. Line Breaks
+    return text.replace(/\n/g, "<br>");
+}
+
+function copyCode(id) {
+    const code = document.getElementById(id).innerText;
+    navigator.clipboard.writeText(code).then(() => {
+        const btn = document.querySelector(`[onclick="copyCode('${id}')"]`);
+        const original = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-check"></i> SYNCED';
+        setTimeout(() => btn.innerHTML = original, 2000);
+    });
+}
+
+function sendMessage() {
+    let input = document.getElementById("user-input");
+    let message = input.value.trim();
+    if (!message) return;
+
+    let chatBox = document.getElementById("chat-box");
+
+    chatBox.innerHTML += `
+        <div class="flex justify-end items-end mb-4">
+            <div class="bubble-user">
+                <p class="text-[9px] opacity-70 mb-1 font-extrabold uppercase tracking-widest text-right">User Identity</p>
+                <p class="text-sm font-medium">${message}</p>
+            </div>
+        </div>
+    `;
+
+    const typingId = "typing-" + Date.now();
+    chatBox.innerHTML += `
+        <div id="${typingId}" class="flex justify-start mb-4">
+            <div class="bubble-bot py-3 px-4">
+                <div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>
+            </div>
+        </div>
+    `;
+
+    chatBox.scrollTop = chatBox.scrollHeight;
+    input.value = "";
+
+    fetch("{% url 'chatbot_response' %}", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-CSRFToken": "{{ csrf_token }}" },
+        body: JSON.stringify({ message: message })
+    })
+    .then(response => response.json())
+    .then(data => {
+        const typingEl = document.getElementById(typingId);
+        if(typingEl) typingEl.remove();
+        
+        chatBox.innerHTML += `
+            <div class="flex justify-start items-end mb-4">
+                <div class="bubble-bot animate__animated animate__fadeInUp">
+                    <p class="text-[10px] text-primary mb-2 font-extrabold uppercase tracking-widest">Consultant Node</p>
+                    <div class="leading-relaxed text-sm font-medium">${formatText(data.reply)}</div>
+                </div>
+            </div>
+        `;
+        chatBox.scrollTop = chatBox.scrollHeight;
+    })
+    .catch(error => {
+        const typingEl = document.getElementById(typingId);
+        if(typingEl) typingEl.remove();
+    });
+}
+</script>
+
+{% endblock %}

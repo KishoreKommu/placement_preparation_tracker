@@ -1,0 +1,395 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+
+<style>
+    :root {
+        --primary: #6366f1;
+        --primary-soft: rgba(99, 102, 241, 0.1);
+        --bg-main: #f8fafc;
+        --surface: #ffffff;
+        --border-color: #e2e8f0;
+        --text-base: #1e293b;
+        --text-muted: #64748b;
+        --leetcode: #ffa116;
+        --gfg: #2f8d46;
+    }
+
+    body {
+        background-color: var(--bg-main);
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        color: var(--text-base);
+    }
+
+    .analytics-container {
+        padding: 3rem;
+        max-width: 1600px;
+        margin: 0 auto;
+    }
+
+    /* --- BENTO TILE SYSTEM --- */
+    .metric-tile {
+        background: var(--surface);
+        border: 1px solid var(--border-color);
+        border-radius: 24px;
+        padding: 1.75rem;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+
+    .metric-tile:hover {
+        transform: translateY(-5px);
+        border-color: var(--primary);
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05);
+    }
+
+    .tile-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+    }
+
+    .platform-pill {
+        font-size: 0.65rem;
+        font-weight: 800;
+        padding: 4px 10px;
+        border-radius: 100px;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        color: white;
+    }
+
+    .tile-label {
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .tile-value {
+        font-size: 2.25rem;
+        font-weight: 800;
+        letter-spacing: -1px;
+        margin: 0.25rem 0;
+    }
+
+    /* --- CHART MODULES --- */
+    .chart-card {
+        background: var(--surface);
+        border: 1px solid var(--border-color);
+        border-radius: 28px;
+        padding: 2rem;
+        height: 100%;
+    }
+
+    .gauge-wrapper {
+        position: relative;
+        width: 220px;
+        height: 220px;
+        margin: 0 auto;
+    }
+
+    .gauge-center-text {
+        position: absolute;
+        top: 55%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        text-align: center;
+    }
+
+    /* --- TABLE REFINEMENT --- */
+    .pro-table {
+        margin-bottom: 0;
+    }
+
+    .pro-table thead th {
+        font-size: 0.7rem;
+        font-weight: 800;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        border-top: none;
+        padding: 1.25rem;
+    }
+
+    .pro-table tbody td {
+        padding: 1.25rem;
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+
+    .risk-indicator {
+        padding: 6px 14px;
+        border-radius: 100px;
+        font-size: 0.7rem;
+        font-weight: 800;
+    }
+
+    .risk-low { background: #ecfdf5; color: #059669; }
+    .risk-med { background: #fffbeb; color: #d97706; }
+    .risk-high { background: #fef2f2; color: #dc2626; }
+
+    /* Layout Correction for Sidebar */
+    .main-content-wrapper {
+        margin-left: 280px !important;
+        width: calc(100% - 280px) !important;
+        padding: 0 !important;
+    }
+</style>
+
+
+
+<div class="analytics-container">
+    
+    <div class="d-flex justify-content-between align-items-end mb-5 animate__animated animate__fadeIn">
+        <div>
+            <h1 class="fw-800 mb-2" style="letter-spacing: -2px; font-size: 2.5rem;">Intelligence Center</h1>
+            <p class="text-muted fw-500">Multidimensional performance mapping across integrated platforms.</p>
+        </div>
+        <div class="d-flex align-items-center gap-3 bg-white p-2 px-3 rounded-pill border shadow-sm mb-2">
+            <div class="spinner-grow spinner-grow-sm text-primary" role="status"></div>
+            <span class="small fw-800 text-uppercase" style="letter-spacing: 1px;">Live Sync: Active</span>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-5">
+        <div class="col-md-3 anim-step">
+            <div class="metric-tile">
+                <div class="tile-header">
+                    <span class="platform-pill" style="background: var(--leetcode)">LeetCode</span>
+                    <i class="fas fa-terminal text-muted opacity-50"></i>
+                </div>
+                <div>
+                    <div class="tile-label">Solved Nodes</div>
+                    <div class="tile-value">{{ lc_solved|default:0 }}</div>
+                </div>
+                <div class="progress mt-3" style="height: 6px; border-radius: 10px; background: var(--bg-main);">
+                    <div class="progress-bar" style="width: {{ lc_solved|default:20 }}%; background: var(--leetcode); border-radius: 10px;"></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 anim-step">
+            <div class="metric-tile">
+                <div class="tile-header">
+                    <span class="platform-pill" style="background: var(--gfg)">GFG Scraped</span>
+                    <i class="fas fa-code-branch text-muted opacity-50"></i>
+                </div>
+                <div>
+                    <div class="tile-label">Global Percentile</div>
+                    <div class="tile-value">{{ gfg_solved|default:82 }}%</div>
+                </div>
+                <div class="d-flex align-items-center gap-2 mt-3 text-success fw-800 small">
+                    <i class="fas fa-arrow-trend-up"></i> TOP 5% ELITE
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 anim-step">
+            <div class="metric-tile">
+                <div class="tile-header">
+                    <span class="platform-pill" style="background: var(--primary)">Arena Internal</span>
+                    <i class="fas fa-microchip text-muted opacity-50"></i>
+                </div>
+                <div>
+                    <div class="tile-label">Avg. Mock Velocity</div>
+                    <div class="tile-value">{{ avg_mock_score|default:0 }}%</div>
+                </div>
+                <div class="text-muted small fw-700 mt-3">
+                    {{ user_goals.count|default:0 }} Objectives Tracked
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 anim-step">
+            <div class="metric-tile" style="background: var(--primary); color: white; border: none;">
+                <div class="tile-header">
+                    <span class="platform-pill" style="background: rgba(255,255,255,0.2)">Global Index</span>
+                    <i class="fas fa-shield-check opacity-50"></i>
+                </div>
+                <div>
+                    <div class="tile-label text-white-50">Placement Readiness</div>
+                    <div class="tile-value">{{ prep_score|default:75 }}%</div>
+                </div>
+                <div class="mt-3 small fw-800 text-uppercase" style="letter-spacing: 1px;">
+                    Tier-1 Verification: Passed
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-5">
+        <div class="col-lg-4 anim-step">
+            <div class="chart-card text-center">
+                <h6 class="fw-800 text-start mb-5 text-uppercase small" style="letter-spacing: 1px;">Sync Readiness Gauge</h6>
+                <div class="gauge-wrapper">
+                    <canvas id="gaugeChart"></canvas>
+                    <div class="gauge-center-text">
+                        <div class="fw-800 display-6 mb-0">{{ prep_score|default:75 }}</div>
+                        <div class="tile-label" style="font-size: 0.6rem;">Aggregated</div>
+                    </div>
+                </div>
+                <div class="mt-5 pt-2">
+                    <div class="p-3 rounded-4 border bg-light text-start d-flex justify-content-between align-items-center">
+                        <span class="small fw-700">Web Aggregate Unit</span>
+                        <span class="fw-800 text-primary">{{ total_aggregate|default:0 }} Nodes</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-8 anim-step">
+            <div class="chart-card">
+                <div class="d-flex justify-content-between align-items-center mb-5">
+                    <h6 class="fw-800 text-uppercase small m-0" style="letter-spacing: 1px;">Cross-Platform Synergy</h6>
+                    <div class="d-flex gap-3">
+                        <div class="small fw-700"><i class="fas fa-square me-1" style="color: var(--leetcode)"></i> LC</div>
+                        <div class="small fw-700"><i class="fas fa-square me-1" style="color: var(--gfg)"></i> GFG</div>
+                        <div class="small fw-700"><i class="fas fa-square me-1" style="color: var(--primary)"></i> Arena</div>
+                    </div>
+                </div>
+                <div style="height: 380px;">
+                    <canvas id="platformSynergyRadar"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-12 anim-step">
+            <div class="chart-card" style="padding: 0; overflow: hidden;">
+                <div class="p-4 px-5 border-bottom">
+                    <h6 class="fw-800 text-uppercase small m-0" style="letter-spacing: 1px;">Strategic Domain Risk Analysis</h6>
+                </div>
+                <div class="table-responsive">
+                    <table class="table pro-table align-middle">
+                        <thead>
+                            <tr>
+                                <th>Knowledge Domain</th>
+                                <th>Platform Density</th>
+                                <th>Internal Efficiency</th>
+                                <th class="text-end">Placement Risk</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Data Structures & Algos</td>
+                                <td class="text-success fw-800">ULTRA HIGH</td>
+                                <td>92.4%</td>
+                                <td class="text-end"><span class="risk-indicator risk-low">OPTIMAL</span></td>
+                            </tr>
+                            <tr>
+                                <td>Operating Systems</td>
+                                <td class="text-warning fw-800">STAGNANT</td>
+                                <td>{{ avg_mock_score|default:60 }}%</td>
+                                <td class="text-end"><span class="risk-indicator risk-med">REVIEW REQ</span></td>
+                            </tr>
+                            <tr>
+                                <td>System Design</td>
+                                <td class="text-danger fw-800">ZERO DATA</td>
+                                <td>40.0%</td>
+                                <td class="text-end"><span class="risk-indicator risk-high">CRITICAL RISK</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    window.addEventListener('load', () => {
+        // Entrance Animation
+        gsap.from(".anim-step", {
+            y: 30,
+            opacity: 0,
+            duration: 0.8,
+            stagger: 0.12,
+            ease: "expo.out"
+        });
+
+        // 1. Readiness Gauge (Half Doughnut)
+        const gaugeEl = document.getElementById('gaugeChart');
+        if (gaugeEl) {
+            const score = Number("{{ prep_score|default:'75' }}");
+            new Chart(gaugeEl.getContext('2d'), {
+                type: 'doughnut',
+                data: {
+                    datasets: [{
+                        data: [score, 100 - score],
+                        backgroundColor: ['#6366f1', '#f1f5f9'],
+                        borderWidth: 0,
+                        circumference: 180,
+                        rotation: 270,
+                        cutout: '90%',
+                        borderRadius: 20
+                    }]
+                },
+                options: {
+                    plugins: { tooltip: { enabled: false }, legend: { display: false } },
+                    maintainAspectRatio: false
+                }
+            });
+        }
+
+        // 2. Synergy Radar Chart
+        const radarEl = document.getElementById('platformSynergyRadar');
+        if (radarEl) {
+            new Chart(radarEl.getContext('2d'), {
+                type: 'radar',
+                data: {
+                    labels: ['Logic', 'Consistency', 'Complexity', 'Optimization', 'Concurrency', 'Design'],
+                    datasets: [
+                        {
+                            label: 'LeetCode',
+                            data: [85, 90, 75, 80, 40, 30],
+                            borderColor: '#ffa116',
+                            backgroundColor: 'rgba(255, 161, 22, 0.05)',
+                            borderWidth: 2,
+                            pointRadius: 0
+                        },
+                        {
+                            label: 'GeeksforGeeks',
+                            data: [95, 60, 65, 55, 70, 45],
+                            borderColor: '#2f8d46',
+                            backgroundColor: 'rgba(47, 141, 70, 0.05)',
+                            borderWidth: 2,
+                            pointRadius: 0
+                        },
+                        {
+                            label: 'Internal',
+                            data: [70, 95, 85, 90, 80, 75],
+                            borderColor: '#6366f1',
+                            backgroundColor: 'rgba(99, 102, 241, 0.05)',
+                            borderWidth: 2,
+                            pointRadius: 0
+                        }
+                    ]
+                },
+                options: {
+                    scales: {
+                        r: {
+                            grid: { color: '#f1f5f9' },
+                            angleLines: { color: '#f1f5f9' },
+                            ticks: { display: false },
+                            suggestedMin: 0,
+                            suggestedMax: 100,
+                            pointLabels: { font: { weight: '800', size: 10 }, color: '#64748b' }
+                        }
+                    },
+                    plugins: { legend: { display: false } },
+                    maintainAspectRatio: false
+                }
+            });
+        }
+    });
+</script>
+
+{% endblock %}

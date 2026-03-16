@@ -1,0 +1,361 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/confetti-js@0.0.18/dist/index.min.js"></script>
+
+<style>
+    :root {
+        --bg-main: #f8fafc;
+        --sidebar-bg: #ffffff;
+        --accent: #6366f1;
+        --text-main: #0f172a;
+        --text-muted: #64748b;
+        --border: #e2e8f0;
+        --success: #10b981;
+        --danger: #ef4444;
+    }
+
+    body { 
+        background-color: var(--bg-main); 
+        font-family: 'Inter', sans-serif; 
+        color: var(--text-main);
+    }
+
+    /* --- LAYOUT --- */
+    .app-container { display: flex; min-height: 100vh; }
+    
+    .sidebar {
+        width: 280px;
+        background: var(--sidebar-bg);
+        border-right: 1px solid var(--border);
+        padding: 2rem 1.5rem;
+        display: flex;
+        flex-direction: column;
+        position: fixed;
+        height: 100vh;
+        z-index: 100;
+    }
+
+    .main-content { margin-left: 280px; flex-grow: 1; padding: 2rem 3rem; }
+
+    /* --- SMOOTHER OVERLAY --- */
+    #goal-overlay {
+        position: fixed; inset: 0; background: rgba(15, 23, 42, 0.85); z-index: 3000;
+        display: flex; align-items: center; justify-content: center; backdrop-filter: blur(8px);
+    }
+    .goal-modal { 
+        background: white; padding: 2.5rem; border-radius: 20px; width: 100%; max-width: 420px; 
+        box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
+        animation: fadeInDown 0.5s ease-out;
+    }
+
+    /* --- CARDS & UI --- */
+    .glass-card {
+        background: white; border: 1px solid var(--border); border-radius: 16px;
+        padding: 1.5rem; transition: all 0.3s ease;
+    }
+
+    /* TASK LIST FIXES */
+    #task-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+        width: 100%;
+        margin-top: 1rem;
+    }
+
+    .task-card {
+        display: flex; 
+        align-items: center; 
+        padding: 1rem; 
+        border-radius: 12px;
+        background: white; 
+        border: 1px solid var(--border);
+        transition: transform 0.2s ease;
+        animation-duration: 0.4s !important; /* Fast and snappy */
+    }
+    
+    .task-card.completed { opacity: 0.6; background: #f8fafc; border-left: 4px solid var(--success); }
+
+    .stat-circle {
+        width: 100px; height: 100px; border-radius: 50%;
+        background: conic-gradient(var(--success) 0deg, #f1f5f9 0deg);
+        display: flex; align-items: center; justify-content: center; position: relative;
+    }
+    .stat-circle::after {
+        content: ""; position: absolute; width: 84px; height: 84px;
+        background: white; border-radius: 50%;
+    }
+
+    .action-btn {
+        width: 100%; text-align: left; padding: 0.75rem 1rem; border-radius: 10px;
+        border: 1px solid transparent; background: transparent; transition: 0.2s;
+        font-weight: 500; font-size: 0.9rem; margin-bottom: 0.5rem;
+    }
+    .action-btn:hover { background: #f1f5f9; border-color: var(--border); }
+    .btn-danger-soft { color: var(--danger); }
+    .btn-danger-soft:hover { background: #fef2f2; border-color: #fee2e2; }
+
+    .timer-display { font-size: 2.5rem; font-weight: 800; color: var(--accent); }
+    .priority-dot { width: 8px; height: 8px; border-radius: 50%; margin-right: 12px; flex-shrink: 0; }
+    .p-high { background: var(--danger); }
+    .p-med { background: #f59e0b; }
+
+    #pdf-template { display: none; }
+</style>
+
+<canvas id="confetti-canvas" style="position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9999;"></canvas>
+
+<div id="goal-overlay" style="display:none;">
+    <div class="goal-modal">
+        <div class="text-center mb-4">
+            <h3 class="fw-bold mb-1">Target Mission</h3>
+            <p class="text-muted small">Define your focus area for today.</p>
+        </div>
+        <input type="text" id="user-goal-input" class="form-control mb-3 py-2" placeholder="e.g. Meta ML Engineer Prep">
+        <button class="btn btn-primary w-100 py-2 fw-bold" onclick="saveGoal()">Launch Dashboard</button>
+    </div>
+</div>
+
+<div class="app-container">
+    <aside class="sidebar">
+        <div class="mb-5">
+            <h4 class="fw-bold text-primary mb-0"><i class="fas fa-layer-group me-2"></i>DevStack</h4>
+            <span class="badge bg-light text-muted border">v2.0 Professional</span>
+        </div>
+
+        <nav class="flex-grow-1">
+            <p class="text-muted x-small fw-bold text-uppercase mb-3">Core Session</p>
+            <div class="glass-card text-center py-4 mb-4">
+                <div class="timer-display mb-2" id="timer">25:00</div>
+                <button id="timerBtn" class="btn btn-sm btn-dark w-100 rounded-pill" onclick="toggleTimer()">Start Engine</button>
+            </div>
+
+            <p class="text-muted x-small fw-bold text-uppercase mb-3">Management</p>
+            <button class="action-btn" onclick="downloadPDFReport()">
+                <i class="fas fa-file-pdf me-2 text-danger"></i> Export PDF Report
+            </button>
+            <button class="action-btn btn-danger-soft" onclick="resetSystem()">
+                <i class="fas fa-sync-alt me-2"></i> Reset Mission
+            </button>
+        </nav>
+    </aside>
+
+    <main class="main-content">
+        <header class="d-flex justify-content-between align-items-center mb-5">
+            <div>
+                <h2 class="fw-bold mb-1" id="display-goal">---</h2>
+                <div class="text-muted small"><i class="far fa-calendar-alt me-1"></i> <span id="current-date"></span></div>
+            </div>
+            <div class="d-flex align-items-center glass-card py-2 px-3">
+                <div class="stat-circle me-3" id="circular-progress">
+                    <span id="progress-text" style="z-index:1; font-weight:800; font-size:0.9rem;">0%</span>
+                </div>
+                <div>
+                    <div class="small fw-bold">Efficiency</div>
+                    <div class="text-muted x-small"><span id="completed-count">0</span> / <span id="total-count">0</span> Completed</div>
+                </div>
+            </div>
+        </header>
+
+        <div class="row g-4">
+            <div class="col-lg-8">
+                <div class="glass-card mb-4 border-0 shadow-sm">
+                    <div class="d-flex gap-2">
+                        <select id="task-priority" class="form-select w-auto border-0 bg-light fw-bold small">
+                            <option value="p-high">High</option>
+                            <option value="p-med" selected>Medium</option>
+                        </select>
+                        <input type="text" id="new-task-input" class="form-control border-0 bg-light py-2" placeholder="Add new objective...">
+                        <button class="btn btn-primary px-4" onclick="addTask()"><i class="fas fa-plus"></i></button>
+                    </div>
+                </div>
+
+                <div id="task-list"></div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="glass-card border-0 shadow-sm">
+                    <h6 class="fw-bold mb-3 small text-uppercase">Activity Heatmap</h6>
+                    <div class="d-grid gap-1" style="grid-template-columns: repeat(7, 1fr);">
+                        {% for i in "123456789012345678901" %}
+                        <div style="aspect-ratio:1; background:#f1f5f9; border-radius:3px;"></div>
+                        {% endfor %}
+                        <div style="aspect-ratio:1; background:var(--success); border-radius:3px;"></div>
+                    </div>
+                    <div class="mt-3 x-small text-muted d-flex justify-content-between">
+                        <span>Consistency</span>
+                        <span class="text-success fw-bold">12 Day Streak</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<div id="pdf-content" style="padding: 40px; color: #333; font-family: 'Inter', sans-serif; display:none;">
+    <h1 style="color: #6366f1; border-bottom: 2px solid #6366f1; padding-bottom: 10px;">DevStack Mission Report</h1>
+    <p><strong>Mission:</strong> <span id="pdf-goal"></span></p>
+    <p><strong>Date:</strong> <span id="pdf-date"></span></p>
+    <p><strong>Progress:</strong> <span id="pdf-progress"></span></p>
+    <div style="margin-top: 20px;">
+        <h3>Task Breakdown:</h3>
+        <ul id="pdf-task-list" style="list-style: none; padding: 0;"></ul>
+    </div>
+</div>
+
+<script>
+    let tasks = JSON.parse(localStorage.getItem('devTasks') || '[]');
+    let userGoal = localStorage.getItem('devGoal') || '';
+
+    window.onload = () => {
+        if (!userGoal) {
+            document.getElementById('goal-overlay').style.display = 'flex';
+        } else {
+            setupUI();
+        }
+    };
+
+    function saveGoal() {
+        const val = document.getElementById('user-goal-input').value;
+        if (!val) return;
+        userGoal = val;
+        localStorage.setItem('devGoal', val);
+        document.getElementById('goal-overlay').style.display = 'none';
+        setupUI();
+    }
+
+    function setupUI() {
+        document.getElementById('display-goal').innerText = userGoal;
+        document.getElementById('current-date').innerText = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+        renderTasks();
+    }
+
+    function addTask() {
+        const input = document.getElementById('new-task-input');
+        const priority = document.getElementById('task-priority').value;
+        if (!input.value.trim()) return;
+
+        // .unshift puts the new task at the top of the array
+        tasks.unshift({ id: Date.now(), text: input.value, done: false, priority: priority });
+        input.value = '';
+        updateStorage();
+    }
+
+    function renderTasks() {
+        const container = document.getElementById('task-list');
+        container.innerHTML = '';
+
+        tasks.forEach(task => {
+            const div = document.createElement('div');
+            // Added animate__faster to prevent the "drifting" look
+            div.className = `task-card animate__animated animate__fadeInUp animate__faster ${task.done ? 'completed' : ''}`;
+            div.innerHTML = `
+                <div class="priority-dot ${task.priority}"></div>
+                <div class="flex-grow-1 fw-500" style="cursor:pointer" onclick="toggleTask(${task.id})">${task.text}</div>
+                <div class="d-flex gap-3 align-items-center">
+                    <i class="fas ${task.done ? 'fa-check-circle text-success' : 'fa-circle text-light'} fa-lg" onclick="toggleTask(${task.id})" style="cursor:pointer"></i>
+                    <i class="fas fa-trash text-muted small" onclick="deleteTask(${task.id})" style="cursor:pointer"></i>
+                </div>
+            `;
+            container.appendChild(div);
+        });
+        updateStats();
+    }
+
+    function toggleTask(id) {
+        tasks = tasks.map(t => t.id === id ? {...t, done: !t.done} : t);
+        updateStorage();
+    }
+
+    function deleteTask(id) {
+        tasks = tasks.filter(t => t.id !== id);
+        updateStorage();
+    }
+
+    function updateStorage() {
+        localStorage.setItem('devTasks', JSON.stringify(tasks));
+        renderTasks();
+    }
+
+    function updateStats() {
+        const total = tasks.length;
+        const done = tasks.filter(t => t.done).length;
+        const percent = total === 0 ? 0 : Math.round((done / total) * 100);
+
+        document.getElementById('progress-text').innerText = percent + '%';
+        document.getElementById('completed-count').innerText = done;
+        document.getElementById('total-count').innerText = total;
+        document.getElementById('circular-progress').style.background = `conic-gradient(var(--success) ${percent * 3.6}deg, #f1f5f9 0deg)`;
+
+        if (percent === 100 && total > 0) {
+            const confetti = new ConfettiGenerator({ target: 'confetti-canvas', max: 40 });
+            confetti.render();
+            setTimeout(() => confetti.clear(), 3000);
+        }
+    }
+
+    function downloadPDFReport() {
+        const pdfContent = document.getElementById('pdf-content');
+        pdfContent.style.display = 'block';
+        
+        document.getElementById('pdf-goal').innerText = userGoal;
+        document.getElementById('pdf-date').innerText = new Date().toDateString();
+        document.getElementById('pdf-progress').innerText = document.getElementById('progress-text').innerText;
+        
+        const list = document.getElementById('pdf-task-list');
+        list.innerHTML = '';
+        tasks.forEach(t => {
+            list.innerHTML += `<li style="padding: 8px; border-bottom: 1px solid #eee;">
+                [${t.done ? '✓' : ' '}] ${t.text} (${t.priority.split('-')[1].toUpperCase()})
+            </li>`;
+        });
+
+        const opt = {
+            margin: 1,
+            filename: `DevStack_Report.pdf`,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2 },
+            jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+        };
+
+        html2pdf().set(opt).from(pdfContent).save().then(() => {
+            pdfContent.style.display = 'none';
+        });
+    }
+
+    function resetSystem() {
+        if(confirm("Clear current mission?")) {
+            localStorage.clear();
+            location.reload();
+        }
+    }
+
+    let timerInt; let isRunning = false; let timeLeft = 1500;
+    function toggleTimer() {
+        const btn = document.getElementById('timerBtn');
+        if(isRunning) {
+            clearInterval(timerInt);
+            btn.innerText = "Resume Session";
+        } else {
+            timerInt = setInterval(() => {
+                if(timeLeft <= 0) { clearInterval(timerInt); return; }
+                timeLeft--;
+                let m = Math.floor(timeLeft/60); let s = timeLeft%60;
+                document.getElementById('timer').innerText = `${m}:${s<10?'0':''}${s}`;
+            }, 1000);
+            btn.innerText = "Pause";
+        }
+        isRunning = !isRunning;
+    }
+
+    document.getElementById('new-task-input').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') addTask();
+    });
+</script>
+{% endblock %}

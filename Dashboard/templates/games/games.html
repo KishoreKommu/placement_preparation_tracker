@@ -1,0 +1,237 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+    :root {
+        --game-primary: #6366f1;
+        --game-surface: var(--sidebar-bg);
+    }
+
+    .game-category-label {
+        font-size: .75rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        color: var(--primary);
+        margin-bottom: 1rem;
+        display: block;
+    }
+
+    .game-card {
+        background: var(--game-surface);
+        border: 1px solid rgba(0, 0, 0, .05);
+        border-radius: 20px;
+        transition: .3s;
+        cursor: pointer;
+        overflow: hidden;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .game-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 15px 30px rgba(99, 102, 241, .15);
+        border-color: var(--primary);
+    }
+
+    .game-icon {
+        height: 120px;
+        background: var(--primary-glow);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2.5rem;
+    }
+
+    .game-body {
+        padding: 1.25rem;
+    }
+
+    .game-status {
+        font-size: .65rem;
+        font-weight: 700;
+        padding: 2px 8px;
+        border-radius: 6px;
+        background: #eef2ff;
+        color: #6366f1;
+    }
+</style>
+
+
+<div class="container-fluid">
+
+    <div class="d-flex justify-content-between align-items-end mb-5">
+
+        <div>
+            <h1 class="fw-bold mb-2">🎮 Play Arcade</h1>
+            <p class="text-muted">Boost your cognitive performance with rapid-fire mini-games.</p>
+        </div>
+
+        <div class="badge bg-primary px-3 py-2 rounded-pill shadow-sm">
+            <i class="fas fa-trophy me-2"></i>Rank: High-Speed Developer
+        </div>
+
+    </div>
+
+
+    <!-- ================= Brain Games ================= -->
+
+    <span class="game-category-label">🧠 Brain & Cognitive Labs</span>
+
+    <div class="row g-4 mb-5">
+
+        <div class="col-md-3">
+            <a href="{% url 'reaction_game' %}" class="text-decoration-none">
+                <div class="game-card">
+                    <div class="game-icon text-danger"><i class="fas fa-bolt"></i></div>
+                    <div class="game-body">
+                        <div class="d-flex justify-content-between mb-2">
+                            <h6 class="fw-bold mb-0">Reaction Test</h6>
+                            <span class="game-status">Live</span>
+                        </div>
+                        <p class="small text-muted mb-0">Test your neural response timing.</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+
+        <div class="col-md-3">
+            <a href="{% url 'memory_game' %}" class="text-decoration-none">
+                <div class="game-card">
+                    <div class="game-icon text-primary"><i class="fas fa-brain"></i></div>
+                    <div class="game-body">
+                        <h6 class="fw-bold mb-2">Pattern Flip</h6>
+                        <p class="small text-muted mb-0">Find matching pairs under pressure.</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+
+        <div class="col-md-3">
+            <a href="{% url 'math_game' %}" class="text-decoration-none">
+                <div class="game-card">
+                    <div class="game-icon text-success"><i class="fas fa-calculator"></i></div>
+                    <div class="game-body">
+                        <h6 class="fw-bold mb-2">Quick Math</h6>
+                        <p class="small text-muted mb-0">Solve as many as possible in 30s.</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+
+        <div class="col-md-3">
+            <a href="{% url 'color_game' %}" class="text-decoration-none">
+                <div class="game-card">
+                    <div class="game-icon text-warning"><i class="fas fa-palette"></i></div>
+                    <div class="game-body">
+                        <h6 class="fw-bold mb-2">Color Switch</h6>
+                        <p class="small text-muted mb-0">Match words to actual colors.</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+    </div>
+
+
+
+    <!-- ================= Classic Games ================= -->
+
+    <span class="game-category-label">🕹️ Classic Terminal Challenges</span>
+
+    <div class="row g-4 mb-5">
+
+
+        <div class="col-md-3">
+            <a href="{% url 'snake_game' %}" class="text-decoration-none">
+                <div class="game-card">
+                    <div class="game-icon text-success"><i class="fas fa-long-arrow-alt-right"></i></div>
+                    <div class="game-body">
+                        <h6 class="fw-bold mb-2">Snake 2.0</h6>
+                        <p class="small text-muted mb-0">Classic logic and reflex control.</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+
+        <div class="col-md-3">
+            <a href="{% url 'tictactoe_game' %}" class="text-decoration-none">
+                <div class="game-card">
+                    <div class="game-icon text-info"><i class="fas fa-times"></i></div>
+                    <div class="game-body">
+                        <h6 class="fw-bold mb-2">AI Tic-Tac-Toe</h6>
+                        <p class="small text-muted mb-0">Beat our minimax algorithm.</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+
+        <div class="col-md-3">
+            <a href="{% url 'game_2048' %}" class="text-decoration-none">
+                <div class="game-card">
+                    <div class="game-icon text-purple"><i class="fas fa-th-large"></i></div>
+                    <div class="game-body">
+                        <h6 class="fw-bold mb-2">2048 Fusion</h6>
+                        <p class="small text-muted mb-0">Combine tiles to reach the peak.</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+
+        <div class="col-md-3">
+            <div class="game-card opacity-50">
+                <div class="game-icon"><i class="fas fa-lock"></i></div>
+                <div class="game-body">
+                    <h6 class="fw-bold mb-2">Brick Breaker</h6>
+                    <p class="small text-muted mb-0">Unlocks at Level 5.</p>
+                </div>
+            </div>
+        </div>
+
+
+    </div>
+
+
+
+    <!-- ================= Puzzle Section ================= -->
+
+    <span class="game-category-label">🌈 Aesthetic & Puzzle Lab</span>
+
+    <div class="row g-4">
+
+        {% for i in "123456789012" %}
+
+        <div class="col-md-2 col-sm-4">
+
+            <div class="game-card text-center p-3">
+
+                <div class="fs-4 mb-2">
+                    <i class="fas fa-puzzle-piece opacity-50"></i>
+                </div>
+
+                <div class="fw-bold small">
+                    Puzzle #{{forloop.counter}}
+                </div>
+
+                <span class="small text-muted mt-1">
+                    Coming Soon
+                </span>
+
+            </div>
+
+        </div>
+
+        {% endfor %}
+
+    </div>
+
+</div>
+
+{% endblock %}

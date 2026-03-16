@@ -1,0 +1,300 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+    :root {
+        --ttt-x: #f43f5e;
+        --ttt-o: #6366f1;
+        --ttt-bg: #ffffff;
+        --ttt-border: rgba(99, 102, 241, 0.1);
+    }
+
+    .game-container {
+        max-width: 500px;
+        margin: 40px auto;
+        text-align: center;
+        animation: fadeIn 0.8s ease-out;
+    }
+
+    /* --- DASHBOARD --- */
+    .status-panel {
+        background: var(--sidebar-bg);
+        padding: 20px;
+        border-radius: 24px;
+        margin-bottom: 30px;
+        border: 1px solid var(--primary-glow);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.04);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .current-turn { font-weight: 800; font-size: 1.1rem; color: var(--text-dark); }
+    .turn-indicator {
+        padding: 5px 15px;
+        border-radius: 10px;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+    .turn-x { background: rgba(244, 63, 94, 0.1); color: var(--ttt-x); }
+    .turn-o { background: rgba(99, 102, 241, 0.1); color: var(--ttt-o); }
+
+    /* --- THE GRID --- */
+    .ttt-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 15px;
+        background: var(--ttt-bg);
+        padding: 15px;
+        border-radius: 28px;
+        position: relative;
+    }
+
+    .cell {
+        aspect-ratio: 1 / 1;
+        background: var(--bg-main);
+        border: 2px solid var(--ttt-border);
+        border-radius: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 3rem;
+        font-weight: 900;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .cell:hover:not(.occupied) {
+        border-color: var(--primary);
+        transform: translateY(-5px);
+        background: white;
+    }
+
+    .cell.occupied { cursor: default; }
+    .cell.x-mark { color: var(--ttt-x); text-shadow: 0 0 15px rgba(244, 63, 94, 0.3); }
+    .cell.o-mark { color: var(--ttt-o); text-shadow: 0 0 15px rgba(99, 102, 241, 0.3); }
+
+    .winner-cell {
+        background: var(--primary) !important;
+        color: white !important;
+        border-color: var(--primary) !important;
+        animation: pulseMatch 0.5s infinite alternate;
+    }
+
+    @keyframes pulseMatch { from { transform: scale(1); } to { transform: scale(1.05); } }
+
+    /* --- OVERLAY --- */
+    #game-overlay {
+        position: absolute;
+        inset: 0;
+        background: rgba(255, 255, 255, 0.8);
+        backdrop-filter: blur(10px);
+        border-radius: 28px;
+        z-index: 100;
+        display: none;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* --- NAV --- */
+    .btn-back {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--text-muted);
+        text-decoration: none !important;
+        font-weight: 700;
+        margin-bottom: 20px;
+        transition: 0.3s;
+    }
+    .btn-back:hover { color: var(--primary); transform: translateX(-5px); }
+</style>
+
+<div class="game-container">
+    <div class="text-start">
+        <a href="{% url 'games' %}" class="btn-back">
+            <i class="fas fa-chevron-left"></i> Back to Lab
+        </a>
+    </div>
+
+    <div class="mb-4">
+        <h2 class="fw-black mb-1">Neural Conflict</h2>
+        <p class="text-muted small">Pattern validation vs Unbeatable AI</p>
+    </div>
+
+    <div class="status-panel">
+        <div class="current-turn">Turn: <span id="active-player" class="turn-indicator turn-x">X (You)</span></div>
+        <button class="btn btn-light btn-sm fw-bold rounded-pill px-3" onclick="resetGame()">Reset</button>
+    </div>
+
+    <div class="position-relative">
+        <div id="grid" class="ttt-grid">
+            </div>
+
+        <div id="game-overlay" class="animate__animated animate__zoomIn">
+            <h1 id="result-text" class="fw-black text-dark mb-3">X Wins!</h1>
+            <button class="btn btn-primary rounded-pill px-5 fw-bold" onclick="resetGame()">Re-initialize</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    /**
+     * Tic Tac Toe Pro Engine (Minimax AI)
+     */
+    let board = ["", "", "", "", "", "", "", "", ""];
+    let isGameActive = true;
+    const humanPlayer = "X";
+    const aiPlayer = "O";
+
+    const winningConditions = [
+        [0, 1, 2], [3, 4, 5], [6, 7, 8], // Rows
+        [0, 3, 6], [1, 4, 7], [2, 5, 8], // Cols
+        [0, 4, 8], [2, 4, 6]             // Diagonals
+    ];
+
+    function createGrid() {
+        const grid = document.getElementById("grid");
+        grid.innerHTML = '';
+        board.forEach((_, i) => {
+            const cell = document.createElement("div");
+            cell.classList.add("cell");
+            cell.setAttribute("data-index", i);
+            cell.addEventListener("click", () => handleCellClick(i));
+            grid.appendChild(cell);
+        });
+    }
+
+    function handleCellClick(index) {
+        if (board[index] !== "" || !isGameActive) return;
+
+        makeMove(index, humanPlayer);
+        
+        if (isGameActive && !checkDraw()) {
+            updateStatus('turn-o', 'O (AI Thinking...)');
+            setTimeout(makeAIMove, 500);
+        }
+    }
+
+    function makeMove(index, p) {
+        board[index] = p;
+        const cell = document.querySelector(`[data-index='${index}']`);
+        cell.innerText = p;
+        cell.classList.add('occupied', p === 'X' ? 'x-mark' : 'o-mark');
+        cell.classList.add('animate__animated', 'animate__bounceIn');
+        
+        if (checkWin(board, p)) {
+            endGame(p);
+        } else if (checkDraw()) {
+            endGame('draw');
+        }
+    }
+
+    function makeAIMove() {
+        const bestIndex = minimax(board, aiPlayer).index;
+        makeMove(bestIndex, aiPlayer);
+        if (isGameActive) updateStatus('turn-x', 'X (You)');
+    }
+
+    function updateStatus(className, text) {
+        const el = document.getElementById('active-player');
+        el.className = `turn-indicator ${className}`;
+        el.innerText = text;
+    }
+
+    function checkWin(b, p) {
+        return winningConditions.some(condition => {
+            return condition.every(index => b[index] === p);
+        });
+    }
+
+    function checkDraw() {
+        return board.every(cell => cell !== "");
+    }
+
+    function endGame(winner) {
+        isGameActive = false;
+        const overlay = document.getElementById('game-overlay');
+        const text = document.getElementById('result-text');
+        
+        overlay.style.display = 'flex';
+        if (winner === 'draw') {
+            text.innerText = "Conflict Draw";
+        } else {
+            text.innerText = winner === 'X' ? "Human Dominance!" : "AI Superiority!";
+            highlightWinner(winner);
+        }
+    }
+
+    function highlightWinner(p) {
+        winningConditions.forEach(condition => {
+            if (condition.every(index => board[index] === p)) {
+                condition.forEach(index => {
+                    document.querySelector(`[data-index='${index}']`).classList.add('winner-cell');
+                });
+            }
+        });
+    }
+
+    function resetGame() {
+        board = ["", "", "", "", "", "", "", "", ""];
+        isGameActive = true;
+        document.getElementById('game-overlay').style.display = 'none';
+        updateStatus('turn-x', 'X (You)');
+        createGrid();
+    }
+
+    /* --- UNBEATABLE MINIMAX ALGORITHM --- */
+    function minimax(newBoard, player) {
+        const availSpots = newBoard.map((v, i) => v === "" ? i : null).filter(v => v !== null);
+
+        if (checkWin(newBoard, humanPlayer)) return { score: -10 };
+        if (checkWin(newBoard, aiPlayer)) return { score: 10 };
+        if (availSpots.length === 0) return { score: 0 };
+
+        const moves = [];
+        for (let i = 0; i < availSpots.length; i++) {
+            const move = {};
+            move.index = availSpots[i];
+            newBoard[availSpots[i]] = player;
+
+            if (player === aiPlayer) {
+                const result = minimax(newBoard, humanPlayer);
+                move.score = result.score;
+            } else {
+                const result = minimax(newBoard, aiPlayer);
+                move.score = result.score;
+            }
+
+            newBoard[availSpots[i]] = "";
+            moves.push(move);
+        }
+
+        let bestMove;
+        if (player === aiPlayer) {
+            let bestScore = -10000;
+            for (let i = 0; i < moves.length; i++) {
+                if (moves[i].score > bestScore) {
+                    bestScore = moves[i].score;
+                    bestMove = i;
+                }
+            }
+        } else {
+            let bestScore = 10000;
+            for (let i = 0; i < moves.length; i++) {
+                if (moves[i].score < bestScore) {
+                    bestScore = moves[i].score;
+                    bestMove = i;
+                }
+            }
+        }
+        return moves[bestMove];
+    }
+
+    // Start
+    createGrid();
+</script>
+
+{% endblock %}

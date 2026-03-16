@@ -1,0 +1,268 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+
+<style>
+    /* 1. RESET & ARCHITECTURE */
+    .sidebar-wrapper, .top-header { display: none !important; }
+    .main-content-wrapper { margin-left: 0 !important; width: 100vw !important; padding: 0 !important; }
+
+    :root {
+        --auth-bg: #f8fafc;
+        --auth-card: #ffffff;
+        --auth-text: #1e293b;
+        --auth-border: #e2e8f0;
+        --primary: #6366f1;
+        --lc-color: #ffa116;
+        --gfg-color: #2f8d46;
+        --danger: #ef4444;
+    }
+
+    body.dark-theme {
+        --auth-bg: #0d0f14;
+        --auth-card: #161922;
+        --auth-text: #f8fafc;
+        --auth-border: #2d3343;
+    }
+
+    body {
+        background-color: var(--auth-bg);
+        min-height: 100vh;
+        width: 100vw;
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+        /* Medium background transition */
+        transition: background 0.6s ease-in-out;
+        font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+
+    /* 2. MINIMALIST NAV */
+    .auth-nav {
+        width: 100%;
+        padding: 1rem 4rem;
+        background: var(--auth-card);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid var(--auth-border);
+    }
+
+    .brand-link {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        text-decoration: none !important;
+        color: var(--auth-text);
+    }
+
+    /* 3. CENTERED COMPACT AREA */
+    .auth-container {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem 1rem;
+    }
+
+    .auth-card {
+        background: var(--auth-card);
+        border: 1px solid var(--auth-border);
+        border-radius: 1.5rem;
+        padding: 2.5rem;
+        width: 100%;
+        max-width: 450px;
+        color: var(--auth-text);
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+        /* Medium card transitions */
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .auth-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 20px 35px -10px rgba(0, 0, 0, 0.1);
+    }
+
+    /* 4. ELITE INPUT FIELDS */
+    .form-group-pro { margin-bottom: 1.5rem; }
+    .input-wrapper { position: relative; }
+
+    .input-icon {
+        position: absolute;
+        left: 14px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--primary);
+        font-size: 0.9rem;
+    }
+
+    .form-control-pro {
+        background: var(--auth-bg);
+        border: 1px solid var(--auth-border);
+        border-radius: 12px;
+        padding: 14px 16px 14px 40px;
+        color: var(--auth-text);
+        width: 100%;
+        transition: 0.3s ease;
+        outline: none;
+        font-weight: 500;
+    }
+
+    .form-control-pro:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+        background: var(--auth-card);
+    }
+
+    .btn-save {
+        background: var(--primary);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        padding: 16px;
+        font-weight: 800;
+        width: 100%;
+        letter-spacing: 0.5px;
+        transition: 0.3s;
+        cursor: pointer;
+        margin-top: 1rem;
+        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+    }
+
+    .btn-save:hover { 
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
+        opacity: 0.95;
+    }
+
+    .label-pro {
+        font-size: 0.75rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: #64748b;
+        margin-bottom: 8px;
+        display: block;
+    }
+
+    .theme-btn {
+        background: none;
+        border: 1px solid var(--auth-border);
+        color: var(--primary);
+        width: 38px; height: 38px;
+        border-radius: 8px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: 0.3s;
+    }
+
+    .cancel-link {
+        font-size: 0.85rem;
+        font-weight: 700;
+        text-decoration: none;
+        color: #64748b;
+        transition: 0.3s; 
+        padding: 8px 16px;
+        border-radius: 8px;
+    }
+
+    .cancel-link:hover {
+        color: var(--danger);
+        background: rgba(239, 68, 68, 0.1);
+    }
+
+    footer {
+        background: var(--auth-card);
+        width: 100%;
+        border-top: 1px solid var(--auth-border);
+        padding: 1rem 0;
+        margin-top: auto;
+    }
+</style>
+
+<header class="auth-nav">
+    <a href="/" class="brand-link">
+        <div class="bg-primary text-white rounded-2 p-2"><i class="fas fa-bolt"></i></div>
+        <span class="fw-bold fs-5">PrepMaster</span>
+    </a>
+    
+    <div class="d-flex align-items-center gap-3">
+        <button class="theme-btn" onclick="toggleAuthTheme()" id="auth-theme-toggle">
+            <i class="fas fa-moon"></i>
+        </button>
+        <a href="{% url 'dashboard' %}" class="cancel-link">Cancel</a>
+    </div>
+</header>
+
+<main class="auth-container">
+    <div class="auth-card animate__animated animate__zoomIn">
+        <div class="text-center mb-4">
+            <div class="d-inline-flex align-items-center justify-content-center bg-soft-primary rounded-circle mb-3" style="width: 60px; height: 60px; background: rgba(99, 102, 241, 0.1);">
+                <i class="fas fa-user-edit text-primary fs-4"></i>
+            </div>
+            <h3 class="fw-bold mb-1">Coding Profiles</h3>
+            <p class="text-muted small">Link your handles to sync progress.</p>
+        </div>
+
+        <form method="POST">
+            {% csrf_token %}
+            
+            <div class="form-group-pro">
+                <label class="label-pro">LeetCode Username</label>
+                <div class="input-wrapper">
+                    <i class="fab fa-leetcode input-icon" style="color: var(--lc-color);"></i>
+                    <input type="text" name="leetcode_id" class="form-control-pro" 
+                           placeholder="e.g. janesmith_24" value="{{ profile.leetcode_id }}">
+                </div>
+            </div>
+
+            <div class="form-group-pro">
+                <label class="label-pro">GeeksForGeeks ID</label>
+                <div class="input-wrapper">
+                    <i class="fas fa-code input-icon" style="color: var(--gfg-color);"></i>
+                    <input type="text" name="gfg_id" class="form-control-pro" 
+                           placeholder="e.g. jane_gfg_101" value="{{ profile.gfg_id }}">
+                </div>
+            </div>
+
+            <button type="submit" class="btn-save">
+                <i class="fas fa-sync-alt me-2"></i> Save & Sync Profiles
+            </button>
+        </form>
+
+        <div class="mt-4 p-3 rounded-3" style="background: var(--auth-bg); border: 1px dashed var(--auth-border);">
+            <p class="mb-0 x-small text-muted text-center">
+                <i class="fas fa-info-circle me-1"></i> 
+                Profile updates may take up to 5 minutes to reflect in the dashboard analytics.
+            </p>
+        </div>
+    </div>
+</main>
+
+<!-- <footer class="text-center">
+    <p class="x-small text-muted mb-0">© 2026 PrepMaster Placement Systems.</p>
+</footer> -->
+
+<script>
+    function toggleAuthTheme() {
+        const body = document.body;
+        const icon = document.querySelector('#auth-theme-toggle i');
+        const isDark = body.classList.toggle('dark-theme');
+        icon.className = isDark ? 'fas fa-sun' : 'fas fa-moon';
+        localStorage.setItem('auth-theme', isDark ? 'dark' : 'light');
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        if (localStorage.getItem('auth-theme') === 'dark') {
+            document.body.classList.add('dark-theme');
+            const themeBtnIcon = document.querySelector('#auth-theme-toggle i');
+            if (themeBtnIcon) themeBtnIcon.className = 'fas fa-sun';
+        }
+    });
+</script>
+
+{% endblock %}

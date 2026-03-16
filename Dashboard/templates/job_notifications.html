@@ -1,0 +1,590 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<style>
+    /* ========================================================================
+       1. GLOBAL THEME EXTENSIONS
+       ======================================================================== */
+    :root {
+        --job-bg: #ffffff;
+        --job-border: rgba(99, 102, 241, 0.08);
+        --match-high: #10b981;
+        --match-med: #f59e0b;
+        --tier-gold: #fbbf24;
+        --card-hover-shadow: 0 20px 40px rgba(0, 0, 0, 0.04);
+        --accent-soft: #f5f3ff;
+    }
+
+    body.dark-theme {
+        --job-bg: #161a23;
+        --job-border: rgba(255, 255, 255, 0.05);
+        --accent-soft: #1e1b4b;
+    }
+
+    .career-portal {
+        opacity: 0;
+        animation: portalFadeIn 0.8s forwards ease-out;
+    }
+
+    @keyframes portalFadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ========================================================================
+       2. FILTER SIDEBAR ARCHITECTURE
+       ======================================================================== */
+    .discovery-sidebar {
+        position: sticky;
+        top: 100px;
+        height: calc(100vh - 140px);
+        overflow-y: auto;
+        padding-right: 15px;
+    }
+
+    .discovery-sidebar::-webkit-scrollbar {
+        width: 4px;
+    }
+
+    .filter-group {
+        margin-bottom: 2.5rem;
+    }
+
+    .filter-label {
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        font-weight: 800;
+        color: var(--text-muted);
+        margin-bottom: 1.25rem;
+        display: block;
+    }
+
+    .nav-pill-custom {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 16px;
+        border-radius: 14px;
+        color: var(--text-muted);
+        text-decoration: none !important;
+        font-weight: 600;
+        transition: var(--transition);
+        margin-bottom: 6px;
+        border: 1px solid transparent;
+    }
+
+    .nav-pill-custom:hover {
+        background: var(--accent-soft);
+        color: var(--primary);
+    }
+
+    .nav-pill-custom.active {
+        background: var(--primary);
+        color: white;
+        box-shadow: 0 10px 20px var(--primary-glow);
+    }
+
+    .pill-count {
+        margin-left: auto;
+        font-size: 0.7rem;
+        opacity: 0.6;
+    }
+
+    /* ========================================================================
+       3. SEARCH & SORT BAR
+       ======================================================================== */
+    .intelligence-header {
+        background: var(--job-bg);
+        border: 1px solid var(--job-border);
+        border-radius: 20px;
+        padding: 1.5rem 2rem;
+        margin-bottom: 2.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        box-shadow: var(--shadow-soft);
+    }
+
+    .search-input-wrapper {
+        position: relative;
+        flex: 1;
+        max-width: 500px;
+    }
+
+    .search-input-wrapper i {
+        position: absolute;
+        left: 20px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-muted);
+    }
+
+    .career-search-field {
+        width: 100%;
+        padding: 12px 20px 12px 50px;
+        border-radius: 12px;
+        border: 1px solid var(--job-border);
+        background: var(--bg-main);
+        font-weight: 500;
+        transition: 0.3s;
+    }
+
+    .career-search-field:focus {
+        border-color: var(--primary);
+        outline: none;
+        box-shadow: 0 0 0 4px var(--primary-glow);
+    }
+
+    /* ========================================================================
+       4. JOB CARD - MASTERPIECE DESIGN
+       ======================================================================== */
+    .master-job-card {
+        background: var(--job-bg);
+        border: 1px solid var(--job-border);
+        border-radius: 24px;
+        padding: 30px;
+        margin-bottom: 24px;
+        transition: all 0.4s cubic-bezier(0.2, 1, 0.3, 1);
+        position: relative;
+    }
+
+    .master-job-card:hover {
+        border-color: var(--primary);
+        box-shadow: var(--card-hover-shadow);
+        transform: scale(1.01);
+    }
+
+    .match-indicator {
+        position: absolute;
+        top: 0;
+        right: 40px;
+        padding: 8px 15px;
+        background: var(--primary);
+        color: white;
+        border-radius: 0 0 12px 12px;
+        font-weight: 800;
+        font-size: 0.7rem;
+        letter-spacing: 0.5px;
+    }
+
+    .company-frame {
+        width: 70px;
+        height: 70px;
+        border-radius: 18px;
+        background: #f8fafc;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid #f1f5f9;
+        flex-shrink: 0;
+    }
+
+    .company-frame img {
+        width: 45px;
+        height: auto;
+        border-radius: 4px;
+    }
+
+    .job-title-link {
+        color: var(--text-dark);
+        font-size: 1.35rem;
+        font-weight: 800;
+        text-decoration: none;
+        transition: 0.2s;
+    }
+
+    .job-title-link:hover {
+        color: var(--primary);
+    }
+
+    .tier-badge {
+        font-size: 0.65rem;
+        font-weight: 800;
+        padding: 4px 10px;
+        border-radius: 8px;
+        background: var(--tier-gold);
+        color: #7c2d12;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        margin-left: 10px;
+    }
+
+    .data-strip {
+        display: flex;
+        gap: 24px;
+        margin: 1.5rem 0;
+        padding: 1rem 0;
+        border-top: 1px solid var(--job-border);
+        border-bottom: 1px solid var(--job-border);
+    }
+
+    .data-point {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--text-muted);
+    }
+
+    .data-point i {
+        color: var(--primary);
+        font-size: 0.9rem;
+    }
+
+    .tag-container {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .skill-chip {
+        padding: 6px 14px;
+        background: var(--bg-main);
+        border: 1px solid var(--job-border);
+        border-radius: 10px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: var(--text-muted);
+        transition: 0.3s;
+    }
+
+    .skill-chip:hover {
+        background: var(--primary);
+        color: white;
+        border-color: var(--primary);
+    }
+
+    .benefit-tag {
+        font-size: 0.75rem;
+        color: var(--success);
+        font-weight: 700;
+        background: rgba(16, 185, 129, 0.08);
+        padding: 6px 12px;
+        border-radius: 10px;
+    }
+
+    .action-group {
+        display: flex;
+        gap: 12px;
+        margin-top: 2rem;
+    }
+
+    .btn-apply-main {
+        flex: 1;
+        background: var(--primary);
+        color: white;
+        border: none;
+        padding: 14px;
+        border-radius: 14px;
+        font-weight: 800;
+        transition: 0.3s;
+    }
+
+    .btn-apply-main:hover {
+        background: #4338ca;
+        box-shadow: 0 10px 20px var(--primary-glow);
+    }
+
+    .btn-save-alt {
+        width: 54px;
+        background: var(--bg-main);
+        border: 1px solid var(--job-border);
+        color: var(--text-muted);
+        border-radius: 14px;
+        transition: 0.3s;
+    }
+
+    .btn-save-alt:hover {
+        background: #fee2e2;
+        color: #ef4444;
+        border-color: #fecaca;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 5rem 2rem;
+    }
+
+    .empty-icon {
+        font-size: 4rem;
+        color: var(--primary-glow);
+        margin-bottom: 1.5rem;
+    }
+
+    .shimmer {
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+        background-size: 200% 100%;
+        animation: shimmerMove 1.5s infinite;
+    }
+
+    @keyframes shimmerMove {
+        0% { background-position: -200% 0; }
+        100% { background-position: 200% 0; }
+    }
+</style>
+
+<div class="career-portal container-fluid py-4">
+    <div class="row">
+        <aside class="col-xl-3 col-lg-4 d-none d-lg-block">
+            <div class="discovery-sidebar">
+                <div class="mb-4">
+                    <h3 class="fw-bold h4">Career Discovery</h3>
+                    <p class="text-muted small">Refine your future trajectory</p>
+                </div>
+
+                <div class="filter-group">
+                    <span class="filter-label">Trajectory Type</span>
+                    <nav>
+                        <a href="javascript:void(0)" class="nav-pill-custom active" onclick="applyFilter('all')">
+                            <i class="fas fa-rocket"></i> All Opportunities <span class="pill-count">248</span>
+                        </a>
+                        <a href="javascript:void(0)" class="nav-pill-custom" onclick="applyFilter('JOB')">
+                            <i class="fas fa-briefcase"></i> Full-Time Roles <span class="pill-count">112</span>
+                        </a>
+                        <a href="javascript:void(0)" class="nav-pill-custom" onclick="applyFilter('INT')">
+                            <i class="fas fa-user-graduate"></i> Graduate Internships <span class="pill-count">86</span>
+                        </a>
+                        <a href="javascript:void(0)" class="nav-pill-custom" onclick="applyFilter('FRE')">
+                            <i class="fas fa-code-branch"></i> Open Source / Freelance <span class="pill-count">50</span>
+                        </a>
+                    </nav>
+                </div>
+
+                <div class="filter-group">
+                    <span class="filter-label">Market Segments</span>
+                    <div class="space-y-2">
+                        <div class="form-check custom-checkbox mb-2">
+                            <input class="form-check-input" type="checkbox" checked id="tier1">
+                            <label class="form-check-label fw-600 small ms-2" for="tier1">Tier 1 (MAANG+)</label>
+                        </div>
+                        <div class="form-check custom-checkbox mb-2">
+                            <input class="form-check-input" type="checkbox" checked id="tier2">
+                            <label class="form-check-label fw-600 small ms-2" for="tier2">Series B+ Startups</label>
+                        </div>
+                        <div class="form-check custom-checkbox mb-2">
+                            <input class="form-check-input" type="checkbox" id="tier3">
+                            <label class="form-check-label fw-600 small ms-2" for="tier3">FinTech Hubs</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pale-panel p-4" style="background: var(--tier1-gradient); color: white;">
+                    <h5 class="fw-bold mb-3"><i class="fas fa-shield-heart me-2"></i> Elite Match</h5>
+                    <p class="x-small opacity-80 mb-4">Your current ranking in <b>Skills Lab</b> puts you in the top 2% of candidates for <b>Atlassian SDE-1</b> roles.</p>
+                    <button class="btn btn-light btn-sm w-100 fw-800 rounded-pill">View Requirements</button>
+                </div>
+            </div>
+        </aside>
+
+        <main class="col-xl-9 col-lg-8">
+            <div class="intelligence-header">
+                <div class="search-input-wrapper">
+                    <i class="fas fa-search"></i>
+                    <input type="text" class="career-search-field" placeholder="Search by role, company, or stack..." id="jobSearch">
+                </div>
+                
+                <div class="d-flex gap-3 align-items-center">
+                    <span class="text-muted small fw-bold d-none d-xl-block">Sort by:</span>
+                    <select class="form-select border-0 bg-light fw-bold small rounded-pill px-4" style="width: 160px;">
+                        <option>Most Relevant</option>
+                        <option>Highest Salary</option>
+                        <option>Newest First</option>
+                        <option>Closing Soon</option>
+                    </select>
+                </div>
+            </div>
+
+            <div id="jobList">
+                <div class="master-job-card opportunity-item" data-type="JOB">
+                    <div class="match-indicator">94% PROFILE MATCH</div>
+                    
+                    <div class="d-flex align-items-start gap-4">
+                        <div class="company-frame">
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_Logo.png" alt="Google">
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="d-flex align-items-center mb-1">
+                                <a href="#" class="job-title-link">Software Engineer, Core Infrastructure</a>
+                                <span class="tier-badge"><i class="fas fa-crown"></i> Tier 1</span>
+                            </div>
+                            <div class="text-primary fw-bold mb-3">Google Cloud Platform (GCP)</div>
+                            
+                            <div class="data-strip">
+                                <div class="data-point"><i class="fas fa-map-marker-alt"></i> Hyderabad / Remote</div>
+                                <div class="data-point"><i class="fas fa-money-bill-wave"></i> 34 - 52 LPA</div>
+                                <div class="data-point"><i class="fas fa-calendar-alt"></i> Posted 2 days ago</div>
+                            </div>
+
+                            <p class="text-muted small pe-lg-5">Building distributed systems that power the next generation of cloud computing. Requires high proficiency in C++, Go, and distributed data store architecture.</p>
+
+                            <div class="d-flex justify-content-between align-items-center mt-4">
+                                <div class="tag-container">
+                                    <span class="skill-chip">Distributed Systems</span>
+                                    <span class="skill-chip">Golang</span>
+                                    <span class="skill-chip">Kubernetes</span>
+                                    <span class="benefit-tag"><i class="fas fa-check"></i> Relocation Bonus</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="action-group">
+                        <button class="btn-apply-main" onclick="openApplicationPortal('google')">Apply via PrepMaster AI</button>
+                        <button class="btn-save-alt"><i class="far fa-heart"></i></button>
+                    </div>
+                </div>
+
+                <div class="master-job-card opportunity-item" data-type="INT">
+                    <div class="match-indicator" style="background: var(--success)">TOP CANDIDATE</div>
+                    
+                    <div class="d-flex align-items-start gap-4">
+                        <div class="company-frame">
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a9/Amazon_logo.svg/1024px-Amazon_logo.svg.png" alt="Amazon">
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="d-flex align-items-center mb-1">
+                                <a href="#" class="job-title-link">Software Development Intern</a>
+                                <span class="badge bg-primary ms-3 rounded-pill px-3 py-1" style="font-size: 0.6rem;">Summer 2026</span>
+                            </div>
+                            <div class="text-primary fw-bold mb-3">Amazon Web Services (AWS)</div>
+                            
+                            <div class="data-strip">
+                                <div class="data-point"><i class="fas fa-laptop-house"></i> Fully Remote</div>
+                                <div class="data-point"><i class="fas fa-wallet"></i> 110,000 / Mo</div>
+                                <div class="data-point"><i class="fas fa-hourglass-start"></i> 6 Months</div>
+                            </div>
+
+                            <div class="tag-container">
+                                <span class="skill-chip">Java</span>
+                                <span class="skill-chip">Multithreading</span>
+                                <span class="benefit-tag" style="color: var(--primary); background: var(--primary-glow);"><i class="fas fa-certificate"></i> PPO Potential</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="action-group">
+                        <button class="btn-apply-main" style="background: #22c55e;">One-Click Express Apply</button>
+                        <button class="btn-save-alt"><i class="far fa-heart"></i></button>
+                    </div>
+                </div>
+
+                <div class="master-job-card opportunity-item border-start border-4 border-danger" data-type="JOB">
+                    <div class="d-flex align-items-start gap-4">
+                        <div class="company-frame bg-dark">
+                            <span class="text-white h4 fw-bold m-0">Z</span>
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="d-flex align-items-center mb-1">
+                                <a href="#" class="job-title-link">Founding Engineer (Backend)</a>
+                                <span class="badge bg-danger ms-3 rounded-pill px-3 py-1" style="font-size: 0.6rem;">Urgent Hiring</span>
+                            </div>
+                            <div class="text-primary fw-bold mb-3">Zepto (Logistics Core)</div>
+                            
+                            <div class="data-strip">
+                                <div class="data-point"><i class="fas fa-map-marker-alt"></i> Bangalore</div>
+                                <div class="data-point"><i class="fas fa-money-bill-wave"></i> 22 - 35 LPA + ESOPs</div>
+                            </div>
+
+                            <p class="text-muted small">Work directly with the CTO to scale order processing engines from 100k to 1M orders per day. Fast-paced, high ownership role.</p>
+
+                            <div class="tag-container">
+                                <span class="skill-chip">Node.js</span>
+                                <span class="skill-chip">Redis</span>
+                                <span class="skill-chip">Microservices</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="action-group">
+                        <button class="btn-apply-main">Access Application Link</button>
+                        <button class="btn-save-alt"><i class="far fa-heart"></i></button>
+                    </div>
+                </div>
+            </div>
+
+            <nav class="d-flex justify-content-center mt-5 mb-5">
+                <ul class="pagination gap-2 border-0">
+                    <li class="page-item"><a class="page-link rounded-3 border-0 bg-light text-dark fw-bold px-4" href="#">Previous</a></li>
+                    <li class="page-item active"><a class="page-link rounded-3 border-0 px-4 fw-bold" href="#">1</a></li>
+                    <li class="page-item"><a class="page-link rounded-3 border-0 bg-light text-dark fw-bold px-4" href="#">2</a></li>
+                    <li class="page-item"><a class="page-link rounded-3 border-0 bg-light text-dark fw-bold px-4" href="#">Next</a></li>
+                </ul>
+            </nav>
+        </main>
+    </div>
+</div>
+
+<div class="modal fade" id="applyModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 border-0 shadow-lg">
+            <div class="modal-body p-5 text-center">
+                <div class="spinner-border text-primary mb-4" role="status"></div>
+                <h4 class="fw-bold">PrepMaster AI is applying...</h4>
+                <p class="text-muted">Tailoring your resume keywords to match this company's technical stack and culture profile.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+
+    function applyFilter(type) {
+        const jobs = document.querySelectorAll('.opportunity-item');
+        const filters = document.querySelectorAll('.nav-pill-custom');
+        
+        filters.forEach(f => f.classList.remove('active'));
+        event.currentTarget.classList.add('active');
+
+        let visibleCount = 0;
+        jobs.forEach(job => {
+            const jobType = job.getAttribute('data-type');
+            if (type === 'all' || jobType === type) {
+                job.style.display = 'block';
+                job.style.animation = 'fadeInUp 0.5s ease forwards';
+                visibleCount++;
+            } else {
+                job.style.display = 'none';
+            }
+        });
+
+        if (visibleCount === 0) {
+            showEmptyState();
+        }
+    }
+
+    document.getElementById('jobSearch').addEventListener('input', function(e) {
+        const term = e.target.value.toLowerCase();
+        const jobs = document.querySelectorAll('.opportunity-item');
+
+        jobs.forEach(job => {
+            const content = job.innerText.toLowerCase();
+            if (content.includes(term)) {
+                job.style.display = 'block';
+            } else {
+                job.style.display = 'none';
+            }
+        });
+    });
+
+    function showEmptyState() {
+        const container = document.getElementById('jobList');
+    }
+
+    function openApplicationPortal(company) {
+        const myModal = new bootstrap.Modal(document.getElementById('applyModal'));
+        myModal.show();
+        setTimeout(() => {
+            myModal.hide();
+        }, 2500);
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        console.log("Portal Protocol Initialized...");
+    });
+</script>
+
+{% endblock %}
